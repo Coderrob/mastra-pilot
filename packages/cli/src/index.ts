@@ -53,8 +53,8 @@ program
         handleError(logger, result.error, 'Workflow failed');
       }
       
-      const lastResult = result.results[result.results.length - 1];
-      handleSuccess(`Workflow completed successfully (${result.duration}ms)`, lastResult?.data);
+      const duration = result.duration || 0;
+      handleSuccess(`Workflow completed successfully (${duration}ms)`, result.data);
     } catch (error) {
       handleError(logger, error, 'Error executing workflow');
     }

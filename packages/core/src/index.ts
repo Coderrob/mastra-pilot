@@ -8,6 +8,7 @@ export { LogLevel, StepType } from './enums.js';
 export { WorkflowProvider, StepConfig, WorkflowConfig, WorkflowExecutionContext } from './workflow-provider.js';
 export { WorkflowFacade, WorkflowExecutionResult, createStepWithLogger } from './workflow-facade.js';
 export { MastraAdapter } from './adapters/mastra-adapter.js';
+export { RunnerAdapter, RunnerAdapterOptions } from './runner-adapter.js';
 
 // Re-export Mastra's core primitives
 export { createStep, createWorkflow, Workflow as MastraWorkflow, Step as MastraStep } from '@mastra/core';

@@ -178,9 +178,67 @@ import { WorkflowFacade, MastraAdapter } from '@repo/core';
 5. **Backward Compatible**: Legacy system still works
 6. **Clean API**: Consistent interface regardless of underlying engine
 
+## RunnerAdapter
+
+The `RunnerAdapter` provides execution orchestration for workflows using the adapter pattern:
+
+```typescript
+import { RunnerAdapter, MastraAdapter } from '@repo/core';
+
+const runner = new RunnerAdapter({
+  logger: pino(),
+  provider: new MastraAdapter(), // Or any WorkflowProvider
+});
+
+// Register workflows
+runner.registerWorkflow(workflow1, 'workflow-1');
+runner.registerWorkflow(workflow2, 'workflow-2');
+
+// Execute single workflow
+const result = await runner.runWorkflow('workflow-1', input, context);
+
+// Execute multiple workflows sequentially
+const results = await runner.runWorkflowsSequential([
+  { id: 'workflow-1', input: data1 },
+  { id: 'workflow-2', input: data2 },
+]);
+
+// Execute multiple workflows in parallel
+const results = await runner.runWorkflowsParallel([
+  { id: 'workflow-1', input: data1 },
+  { id: 'workflow-2', input: data2 },
+]);
+```
+
+### Benefits of RunnerAdapter
+
+1. **Provider Abstraction**: Works with any WorkflowProvider
+2. **Strategy Pattern**: Sequential or parallel execution
+3. **Backward Compatible**: Works with legacy workflows
+4. **Context Injection**: Pass custom dependencies through execution context
+5. **Unified API**: Same interface for all workflow types
+
+### Migration to RunnerAdapter
+
+```typescript
+// Before (legacy Runner)
+import { Runner } from '@repo/core';
+const runner = new Runner({ logger });
+runner.registerWorkflow(workflow);
+await runner.runWorkflow('workflow-name', input);
+
+// After (RunnerAdapter with Mastra)
+import { RunnerAdapter, MastraAdapter } from '@repo/core';
+const runner = new RunnerAdapter({ logger, provider: new MastraAdapter() });
+runner.registerWorkflow(workflow, 'workflow-name');
+await runner.runWorkflow('workflow-name', input);
+```
+
 ## Future Enhancements
 
 - Add LangGraphAdapter for LangChain workflows
 - Add CustomAdapter for proprietary workflow engines
 - Add adapters for AWS Step Functions, Temporal, etc.
 - Support for hybrid workflows (mixing providers)
+- Workflow composition and chaining
+- Distributed execution support
