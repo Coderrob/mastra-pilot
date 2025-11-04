@@ -20,7 +20,8 @@
   "dependencies": {
     "@repo/core": "workspace:*",
     "@repo/steps": "workspace:*",
-    "pino": "^8.19.0"
+    "pino": "^8.19.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
