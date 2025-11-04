@@ -1,0 +1,29 @@
+{
+  "name": "@repo/cli",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "mastra": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@repo/core": "workspace:*",
+    "@repo/steps": "workspace:*",
+    "@repo/workflows": "workspace:*",
+    "commander": "^12.0.0",
+    "pino": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "typescript": "^5.3.3",
+    "vitest": "^1.3.1"
+  }
+}
