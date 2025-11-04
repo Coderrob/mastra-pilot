@@ -27,9 +27,6 @@ export class Workflow {
     this.continueOnError = options.continueOnError ?? false;
   }
 
-  /**
-   * Add a step to the workflow
-   */
   addStep(step: BaseStep<any, any>, name?: string): this {
     this.steps.push({
       step,
@@ -38,9 +35,6 @@ export class Workflow {
     return this;
   }
 
-  /**
-   * Execute all steps in sequence
-   */
   async execute(
     initialInput: unknown = {},
     metadata: Record<string, unknown> = {}
@@ -60,24 +54,21 @@ export class Workflow {
       const result = await stepDef.step.execute(currentInput, context);
       results.push(result);
 
-      if (!result.success) {
-        if (!this.continueOnError) {
-          const duration = Date.now() - startTime;
-          this.logger.error(
-            { workflow: this.name, duration, failedStep: stepDef.name },
-            'Workflow execution failed'
-          );
+      if (!result.success && !this.continueOnError) {
+        const duration = Date.now() - startTime;
+        this.logger.error(
+          { workflow: this.name, duration, failedStep: stepDef.name },
+          'Workflow execution failed'
+        );
 
-          return {
-            success: false,
-            results,
-            error: result.error,
-            duration,
-          };
-        }
+        return {
+          success: false,
+          results,
+          error: result.error,
+          duration,
+        };
       }
 
-      // Pass output as input to next step
       currentInput = result.data;
     }
 
@@ -96,16 +87,10 @@ export class Workflow {
     };
   }
 
-  /**
-   * Get workflow name
-   */
   getName(): string {
     return this.name;
   }
 
-  /**
-   * Get workflow steps
-   */
   getSteps(): StepDefinition[] {
     return [...this.steps];
   }
