@@ -1,4 +1,11 @@
-import type { WorkflowProvider, StepConfig, WorkflowConfig, WorkflowExecutionContext } from './workflow-provider.js';
+import type { 
+  WorkflowProvider, 
+  StepConfig, 
+  WorkflowConfig, 
+  WorkflowExecutionContext,
+  WorkflowInstance,
+  StepExecutionContext
+} from './workflow-provider.js';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
 import { Logger } from 'pino';
 
@@ -8,7 +15,7 @@ import { Logger } from 'pino';
  */
 export class WorkflowFacade<TProvider extends WorkflowProvider = MastraAdapter> {
   private provider: TProvider;
-  private workflows: Map<string, any> = new Map();
+  private workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
   constructor(provider?: TProvider) {
     this.provider = provider || (new MastraAdapter() as unknown as TProvider);
@@ -17,42 +24,43 @@ export class WorkflowFacade<TProvider extends WorkflowProvider = MastraAdapter> 
   /**
    * Create a step with dependency injection support
    */
-  createStep<TIn = any, TOut = any>(config: StepConfig<TIn, TOut>) {
+  createStep<TIn = unknown, TOut = unknown>(config: StepConfig<TIn, TOut>) {
     return this.provider.createStep(config);
   }
 
   /**
    * Create a workflow from steps
    */
-  createWorkflow<TIn = any, TOut = any>(config: WorkflowConfig<TIn, TOut>) {
+  createWorkflow<TIn = unknown, TOut = unknown>(config: WorkflowConfig<TIn, TOut>): WorkflowInstance<TIn, TOut> {
     const workflow = this.provider.createWorkflow(config);
-    this.workflows.set(config.id, workflow);
+    // Store as readonly to prevent mutations - cast to unknown for storage
+    this.workflows.set(config.id, Object.freeze(workflow as unknown as WorkflowInstance));
     return workflow;
   }
 
   /**
    * Execute a workflow with context
    */
-  async execute<TIn = any, TOut = any>(
-    workflowIdOrInstance: string | any,
+  async execute<TIn = unknown, TOut = unknown>(
+    workflowIdOrInstance: string | Readonly<WorkflowInstance<TIn, TOut>>,
     input: TIn,
     context?: WorkflowExecutionContext
   ): Promise<WorkflowExecutionResult<TOut>> {
     const workflow = typeof workflowIdOrInstance === 'string'
-      ? this.workflows.get(workflowIdOrInstance)
+      ? this.workflows.get(workflowIdOrInstance) as Readonly<WorkflowInstance<TIn, TOut>> | undefined
       : workflowIdOrInstance;
 
     if (!workflow) {
       throw new Error(`Workflow not found: ${workflowIdOrInstance}`);
     }
 
-    return this.provider.execute(workflow, input, context);
+    return this.provider.execute(workflow as WorkflowInstance<TIn, TOut>, input, context);
   }
 
   /**
    * Get registered workflow by ID
    */
-  getWorkflow(id: string) {
+  getWorkflow(id: string): Readonly<WorkflowInstance> | undefined {
     return this.workflows.get(id);
   }
 
@@ -64,11 +72,11 @@ export class WorkflowFacade<TProvider extends WorkflowProvider = MastraAdapter> 
   }
 }
 
-export interface WorkflowExecutionResult<TOut = any> {
+export interface WorkflowExecutionResult<TOut = unknown> {
   success: boolean;
   data?: TOut;
   error?: Error;
-  results?: any[];
+  results?: ReadonlyArray<unknown>;
   duration?: number;
 }
 
@@ -77,7 +85,7 @@ export interface WorkflowExecutionResult<TOut = any> {
  */
 export function createStepWithLogger<TIn, TOut>(
   config: Omit<StepConfig<TIn, TOut>, 'execute'> & {
-    execute: (input: TIn, context: { logger: Logger; [key: string]: any }) => Promise<TOut>;
+    execute: (input: TIn, context: StepExecutionContext & { logger: Logger }) => Promise<TOut>;
   }
 ): StepConfig<TIn, TOut> {
   return config as StepConfig<TIn, TOut>;

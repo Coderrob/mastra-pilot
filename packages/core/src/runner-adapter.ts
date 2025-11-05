@@ -1,8 +1,33 @@
 import pino, { Logger } from 'pino';
 import { LogLevel } from './enums.js';
 import { WorkflowFacade, WorkflowExecutionResult } from './workflow-facade.js';
-import { WorkflowProvider } from './workflow-provider.js';
+import { WorkflowProvider, WorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
+import { Workflow } from './workflow.js';
+
+/**
+ * Workflow instance - can be legacy Workflow, Mastra workflow, or Mastra step
+ */
+export type WorkflowInstance = Workflow | {
+  id?: string;
+  getName?: () => string;
+  execute?: (input: unknown, context?: unknown) => Promise<unknown>;
+  [key: string]: unknown;
+};
+
+/**
+ * Type guard to check if workflow has id property
+ */
+function hasId(workflow: WorkflowInstance): workflow is { id: string } {
+  return 'id' in workflow && typeof workflow.id === 'string';
+}
+
+/**
+ * Type guard to check if workflow has getName method
+ */
+function hasGetName(workflow: WorkflowInstance): workflow is { getName: () => string } {
+  return 'getName' in workflow && typeof workflow.getName === 'function';
+}
 
 export interface RunnerAdapterOptions {
   logger?: Logger;
@@ -17,7 +42,7 @@ export interface RunnerAdapterOptions {
 export class RunnerAdapter {
   private readonly logger: Logger;
   private readonly facade: WorkflowFacade;
-  private readonly workflows: Map<string, any> = new Map();
+  private readonly workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
   constructor(options: RunnerAdapterOptions = {}) {
     this.logger = options.logger ?? pino({
@@ -38,9 +63,15 @@ export class RunnerAdapter {
   /**
    * Register a workflow (can be legacy or provider-based)
    */
-  registerWorkflow(workflow: any, id?: string): this {
-    const workflowId = id || workflow.id || workflow.getName?.() || 'unnamed-workflow';
-    this.workflows.set(workflowId, workflow);
+  registerWorkflow(workflow: WorkflowInstance, id?: string): this {
+    // Determine workflow ID using type guards
+    const workflowId = id 
+      || (hasId(workflow) ? workflow.id : undefined)
+      || (hasGetName(workflow) ? workflow.getName() : undefined)
+      || 'unnamed-workflow';
+    
+    // Store as readonly to prevent mutations
+    this.workflows.set(workflowId, Object.freeze(workflow));
     this.logger.info({ workflow: workflowId }, 'Workflow registered');
     return this;
   }
@@ -70,8 +101,8 @@ export class RunnerAdapter {
       ...context,
     };
 
-    // Execute through the facade
-    return this.facade.execute(workflow, input, executionContext);
+    // Execute through the facade - cast workflow for execution compatibility
+    return this.facade.execute(workflow as unknown as ProviderWorkflowInstance, input, executionContext);
   }
 
   /**

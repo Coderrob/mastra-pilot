@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import pino, { Logger } from 'pino';
+import { IOutputWriter, ConsoleOutputWriter } from './output-writer.js';
 
 /**
  * Parse input from JSON string or file
@@ -24,22 +25,24 @@ export function createLogger(level: string = 'info'): Logger {
 }
 
 /**
+ * Create an output writer instance
+ */
+export function createOutputWriter(): IOutputWriter {
+  return new ConsoleOutputWriter();
+}
+
+/**
  * Handle success result and exit
  */
-export function handleSuccess(message: string, data?: unknown): never {
-  console.log(`✓ ${message}`);
-  if (data !== undefined) {
-    console.log(JSON.stringify(data, null, 2));
-  }
+export function handleSuccess(writer: IOutputWriter, message: string, data?: unknown): never {
+  writer.info(message, data);
   process.exit(0);
 }
 
 /**
  * Handle error and exit
  */
-export function handleError(logger: Logger, error: unknown, context: string): never {
+export function handleError(writer: IOutputWriter, _logger: Logger, error: unknown, context: string): never {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`✗ ${context}: ${message}`);
-  logger.error(error, context);
-  process.exit(1);
+  writer.fatal(`${context}: ${message}`);
 }

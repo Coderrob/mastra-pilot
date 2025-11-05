@@ -17,7 +17,7 @@ export function createMastraWorkflowExample() {
   const fileReadStep = facade.createStep(fileReadStepConfig);
   const httpStep = facade.createStep(httpStepConfig);
 
-  // Create workflow
+  // Create workflow with steps cast to unknown for compatibility
   const workflow = facade.createWorkflow({
     id: 'example-workflow',
     name: 'Example Workflow',
@@ -28,9 +28,9 @@ export function createMastraWorkflowExample() {
     }),
     outputSchema: z.object({
       fileContent: z.string(),
-      apiResponse: z.any(),
+      apiResponse: z.unknown(),
     }),
-    steps: [fileReadStep, httpStep],
+    steps: [fileReadStep, httpStep] as never[],
   });
 
   return { facade, workflow, logger };

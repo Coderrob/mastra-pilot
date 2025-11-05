@@ -67,9 +67,9 @@ export async function runMultipleWorkflows() {
     },
   });
 
-  // Register workflows
-  runner.registerWorkflow(fileStep, 'file-workflow');
-  runner.registerWorkflow(processStep, 'process-workflow');
+  // Register workflows (steps can act as simple workflows)
+  runner.registerWorkflow(fileStep as never, 'file-workflow');
+  runner.registerWorkflow(processStep as never, 'process-workflow');
 
   // Execute workflows sequentially
   const results = await runner.runWorkflowsSequential([
@@ -108,8 +108,8 @@ export async function runParallelWorkflows() {
     },
   });
 
-  runner.registerWorkflow(httpStep, 'api-workflow-1');
-  runner.registerWorkflow(httpStep, 'api-workflow-2');
+  runner.registerWorkflow(httpStep as never, 'api-workflow-1');
+  runner.registerWorkflow(httpStep as never, 'api-workflow-2');
 
   // Execute in parallel
   const results = await runner.runWorkflowsParallel([
@@ -144,7 +144,7 @@ export async function runMixedWorkflows() {
 
   // Register both types
   runner.registerWorkflow(legacyWorkflow, 'legacy-workflow');
-  runner.registerWorkflow(mastraStep, 'mastra-workflow');
+  runner.registerWorkflow(mastraStep as never, 'mastra-workflow');
 
   // Execute both
   const legacyResult = await runner.runWorkflow('legacy-workflow', { command: 'echo', args: ['test'] });

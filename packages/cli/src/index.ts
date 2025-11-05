@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { createLogger, parseInput, handleSuccess, handleError } from './utils.js';
+import { createLogger, createOutputWriter, parseInput, handleSuccess, handleError } from './utils.js';
 import { createStep, executeStep } from './step-executor.js';
 import { executeWorkflow, executeWorkflows } from './workflow-executor.js';
 
@@ -20,6 +20,7 @@ program
   .option('-f, --file <path>', 'Input data from JSON file')
   .action(async (type: string, options) => {
     const logger = createLogger();
+    const writer = createOutputWriter();
     
     try {
       const input = parseInput(options);
@@ -27,12 +28,12 @@ program
       const result = await executeStep(step, input, logger);
       
       if (!result.success) {
-        handleError(logger, result.error, 'Step failed');
+        handleError(writer, logger, result.error, 'Step failed');
       }
       
-      handleSuccess('Step completed successfully', result.data);
+      handleSuccess(writer, 'Step completed successfully', result.data);
     } catch (error) {
-      handleError(logger, error, 'Error executing step');
+      handleError(writer, logger, error, 'Error executing step');
     }
   });
 
@@ -44,19 +45,20 @@ program
   .option('-f, --file <path>', 'Input data from JSON file')
   .action(async (name: string, options) => {
     const logger = createLogger();
+    const writer = createOutputWriter();
     
     try {
       const input = parseInput(options);
       const result = await executeWorkflow(name, input, logger);
       
       if (!result.success) {
-        handleError(logger, result.error, 'Workflow failed');
+        handleError(writer, logger, result.error, 'Workflow failed');
       }
       
       const duration = result.duration || 0;
-      handleSuccess(`Workflow completed successfully (${duration}ms)`, result.data);
+      handleSuccess(writer, `Workflow completed successfully (${duration}ms)`, result.data);
     } catch (error) {
-      handleError(logger, error, 'Error executing workflow');
+      handleError(writer, logger, error, 'Error executing workflow');
     }
   });
 
@@ -68,6 +70,7 @@ program
   .option('-i, --input <json>', 'Input data as JSON string')
   .action(async (options) => {
     const logger = createLogger();
+    const writer = createOutputWriter();
     
     try {
       const input = parseInput(options);
@@ -75,12 +78,12 @@ program
       const results = await executeWorkflows(names, input, logger, options.parallel);
       
       if (!results.every(r => r.success)) {
-        handleError(logger, new Error('Some workflows failed'), 'Workflow execution failed');
+        handleError(writer, logger, new Error('Some workflows failed'), 'Workflow execution failed');
       }
       
-      handleSuccess('All workflows completed successfully');
+      handleSuccess(writer, 'All workflows completed successfully');
     } catch (error) {
-      handleError(logger, error, 'Error running workflows');
+      handleError(writer, logger, error, 'Error running workflows');
     }
   });
 
