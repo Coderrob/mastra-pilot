@@ -24,7 +24,8 @@ describe('StepFactory', () => {
   });
 
   it('should throw error for unknown step type', () => {
-    expect(() => StepFactory.createStep('unknown')).toThrow('Unknown step type: unknown');
+    const unknownType = 'unknown';
+    expect(() => StepFactory.createStep(unknownType)).toThrow(`Unknown step type: ${unknownType}`);
   });
 
   it('should return all registered step types', () => {
@@ -41,14 +42,14 @@ describe('StepFactory', () => {
     expect(StepFactory.hasStepType('unknown')).toBe(false);
   });
 
-  describe.each([
-    { type: 'file-read', expectedName: 'FileReadStep' },
-    { type: 'csv-write', expectedName: 'CsvWriteStep' },
-    { type: 'http', expectedName: 'HttpStep' },
-    { type: 'shell', expectedName: 'ShellStep' },
-    { type: 'git', expectedName: 'GitStep' },
-  ])('step creation', ({ type, expectedName }) => {
-    it(`creates ${type} step with name ${expectedName}`, () => {
+  describe('step creation', () => {
+    it.each([
+      { type: 'file-read', expectedName: 'FileReadStep' },
+      { type: 'csv-write', expectedName: 'CsvWriteStep' },
+      { type: 'http', expectedName: 'HttpStep' },
+      { type: 'shell', expectedName: 'ShellStep' },
+      { type: 'git', expectedName: 'GitStep' },
+    ])('should create $type step with name $expectedName', ({ type, expectedName }) => {
       const step = StepFactory.createStep(type);
       expect(step.getName()).toBe(expectedName);
     });

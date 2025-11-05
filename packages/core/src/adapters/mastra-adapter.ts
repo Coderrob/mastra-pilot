@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createStep as mastraCreateStep, createWorkflow as mastraCreateWorkflow } from '@mastra/core';
+import { isObject } from '@repo/utils';
 import type { 
   WorkflowProvider, 
   StepConfig, 
@@ -28,7 +29,7 @@ interface MastraExecutionContext {
  * Type guard to check if context is MastraExecutionContext
  */
 function isMastraContext(context: unknown): context is MastraExecutionContext {
-  return typeof context === 'object' && context !== null;
+  return isObject(context);
 }
 
 /**

@@ -8,17 +8,20 @@ import type {
 } from './workflow-provider.js';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
 import { Logger } from 'pino';
+import { isString } from '@repo/utils';
 
 /**
  * Workflow Facade - Provider-agnostic workflow orchestration
  * Uses adapter pattern to support multiple workflow engines (Mastra, LangGraph, etc.)
  */
-export class WorkflowFacade<TProvider extends WorkflowProvider = MastraAdapter> {
+export class WorkflowFacade<TProvider extends WorkflowProvider = WorkflowProvider> {
   private provider: TProvider;
   private workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
   constructor(provider?: TProvider) {
-    this.provider = provider || (new MastraAdapter() as unknown as TProvider);
+    // Default to MastraAdapter if no provider specified
+    // This is safe because MastraAdapter implements WorkflowProvider
+    this.provider = provider ?? (new MastraAdapter() as TProvider);
   }
 
   /**
@@ -46,14 +49,20 @@ export class WorkflowFacade<TProvider extends WorkflowProvider = MastraAdapter> 
     input: TIn,
     context?: WorkflowExecutionContext
   ): Promise<WorkflowExecutionResult<TOut>> {
-    const workflow = typeof workflowIdOrInstance === 'string'
-      ? this.workflows.get(workflowIdOrInstance) as Readonly<WorkflowInstance<TIn, TOut>> | undefined
-      : workflowIdOrInstance;
-
-    if (!workflow) {
-      throw new Error(`Workflow not found: ${workflowIdOrInstance}`);
+    let workflow: Readonly<WorkflowInstance<TIn, TOut>> | undefined;
+    
+    if (isString(workflowIdOrInstance)) {
+      workflow = this.workflows.get(workflowIdOrInstance) as Readonly<WorkflowInstance<TIn, TOut>> | undefined;
+    } else {
+      workflow = workflowIdOrInstance;
     }
 
+    if (!workflow) {
+      const errorId = isString(workflowIdOrInstance) ? workflowIdOrInstance : 'unknown';
+      throw new Error(`Workflow not found: ${errorId}`);
+    }
+
+    // Remove readonly for execution - structurally compatible
     return this.provider.execute(workflow as WorkflowInstance<TIn, TOut>, input, context);
   }
 

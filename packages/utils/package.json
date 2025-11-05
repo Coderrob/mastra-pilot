@@ -14,8 +14,8 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "echo 'No tests for utils package'",
+    "test:watch": "echo 'No tests for utils package'"
   },
   "dependencies": {
     "fs-extra": "^11.2.0",

@@ -54,6 +54,8 @@ describe('BaseStep', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error?.message).toContain('Expected number');
   });
 
   it('should handle step execution errors', async () => {
@@ -61,6 +63,8 @@ describe('BaseStep', () => {
     const result = await step.execute({ value: 5 }, context);
 
     expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.error).toBeInstanceOf(Error);
     expect(result.error?.message).toBe('Step failed');
   });
 
@@ -69,13 +73,13 @@ describe('BaseStep', () => {
     expect(step.getName()).toBe('TestStep');
   });
 
-  describe.each([
-    { input: { value: 1 }, expected: 2 },
-    { input: { value: 10 }, expected: 20 },
-    { input: { value: -5 }, expected: -10 },
-    { input: { value: 0 }, expected: 0 },
-  ])('should double values correctly', ({ input, expected }) => {
-    it(`doubles ${input.value} to ${expected}`, async () => {
+  describe('value doubling', () => {
+    it.each([
+      { input: { value: 1 }, expected: 2 },
+      { input: { value: 10 }, expected: 20 },
+      { input: { value: -5 }, expected: -10 },
+      { input: { value: 0 }, expected: 0 },
+    ])('should double $input.value to $expected', async ({ input, expected }) => {
       const step = new TestStep();
       const result = await step.execute(input, context);
 

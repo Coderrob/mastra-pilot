@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { ExitCode } from '@repo/core';
 
 /**
  * Output message level
@@ -128,7 +129,7 @@ export class ConsoleOutputWriter implements IOutputWriter {
       console.error(this.formatData(data));
     }
     
-    process.exit(1);
+    process.exit(ExitCode.GENERAL_ERROR);
   }
 
   /**

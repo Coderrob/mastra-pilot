@@ -52,11 +52,11 @@ describe('Workflow', () => {
   });
 
   it('should stop on error when continueOnError is false', async () => {
-    class FailingStep extends BaseStep<any, any> {
+    class FailingStep extends BaseStep<{ value: number }, { value: number }> {
       constructor() {
         super('FailingStep');
       }
-      protected async run(): Promise<StepResult<any>> {
+      protected async run(): Promise<StepResult<{ value: number }>> {
         return { success: false, error: new Error('Failed') };
       }
     }
@@ -71,14 +71,16 @@ describe('Workflow', () => {
     expect(result.success).toBe(false);
     expect(result.results).toHaveLength(2);
     expect(result.error).toBeDefined();
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error?.message).toBe('Failed');
   });
 
   it('should continue on error when continueOnError is true', async () => {
-    class FailingStep extends BaseStep<any, any> {
+    class FailingStep extends BaseStep<{ value: number }, { value: number }> {
       constructor() {
         super('FailingStep');
       }
-      protected async run(): Promise<StepResult<any>> {
+      protected async run(): Promise<StepResult<{ value: number }>> {
         return { success: false, error: new Error('Failed') };
       }
     }
@@ -99,12 +101,12 @@ describe('Workflow', () => {
     expect(workflow.getName()).toBe('TestWorkflow');
   });
 
-  describe.each([
-    { initial: 0, add: 5, multiply: 2, expected: 10 },
-    { initial: 10, add: 5, multiply: 2, expected: 30 },
-    { initial: -5, add: 10, multiply: 3, expected: 15 },
-  ])('workflow calculations', ({ initial, add, multiply, expected }) => {
-    it(`(${initial} + ${add}) * ${multiply} = ${expected}`, async () => {
+  describe('workflow calculations', () => {
+    it.each([
+      { initial: 0, add: 5, multiply: 2, expected: 10 },
+      { initial: 10, add: 5, multiply: 2, expected: 30 },
+      { initial: -5, add: 10, multiply: 3, expected: 15 },
+    ])('should calculate ($initial + $add) * $multiply = $expected', async ({ initial, add, multiply, expected }) => {
       const workflow = new Workflow({ name: 'TestWorkflow', logger });
       workflow.addStep(new AddStep(add));
       workflow.addStep(new MultiplyStep(multiply));

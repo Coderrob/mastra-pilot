@@ -4,6 +4,7 @@ import { WorkflowFacade, WorkflowExecutionResult } from './workflow-facade.js';
 import { WorkflowProvider, WorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
 import { Workflow } from './workflow.js';
+import { hasId, hasGetName } from '@repo/utils';
 
 /**
  * Workflow instance - can be legacy Workflow, Mastra workflow, or Mastra step
@@ -14,20 +15,6 @@ export type WorkflowInstance = Workflow | {
   execute?: (input: unknown, context?: unknown) => Promise<unknown>;
   [key: string]: unknown;
 };
-
-/**
- * Type guard to check if workflow has id property
- */
-function hasId(workflow: WorkflowInstance): workflow is { id: string } {
-  return 'id' in workflow && typeof workflow.id === 'string';
-}
-
-/**
- * Type guard to check if workflow has getName method
- */
-function hasGetName(workflow: WorkflowInstance): workflow is { getName: () => string } {
-  return 'getName' in workflow && typeof workflow.getName === 'function';
-}
 
 export interface RunnerAdapterOptions {
   logger?: Logger;
@@ -65,10 +52,19 @@ export class RunnerAdapter {
    */
   registerWorkflow(workflow: WorkflowInstance, id?: string): this {
     // Determine workflow ID using type guards
-    const workflowId = id 
-      || (hasId(workflow) ? workflow.id : undefined)
-      || (hasGetName(workflow) ? workflow.getName() : undefined)
-      || 'unnamed-workflow';
+    let workflowId = id;
+    
+    if (!workflowId && hasId(workflow)) {
+      workflowId = workflow.id;
+    }
+    
+    if (!workflowId && hasGetName(workflow)) {
+      workflowId = workflow.getName();
+    }
+    
+    if (!workflowId) {
+      workflowId = 'unnamed-workflow';
+    }
     
     // Store as readonly to prevent mutations
     this.workflows.set(workflowId, Object.freeze(workflow));
