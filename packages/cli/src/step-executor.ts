@@ -1,4 +1,4 @@
-import { BaseStep, StepResult } from '@repo/core';
+import { BaseStep, StepResult, StepType } from '@repo/core';
 import { Logger } from 'pino';
 import {
   FileReadStep,
@@ -10,22 +10,29 @@ import {
 
 type StepConstructor = new () => BaseStep<any, any>;
 
-const STEP_REGISTRY: Record<string, StepConstructor> = {
-  'file-read': FileReadStep,
-  'csv-write': CsvWriteStep,
-  'http': HttpStep,
-  'shell': ShellStep,
-  'git': GitStep,
+/**
+ * Step registry mapping StepType enum values to their implementations
+ * Uses enum keys instead of hard-coded strings for type safety
+ */
+const STEP_REGISTRY: Record<StepType, StepConstructor> = {
+  [StepType.FILE_READ]: FileReadStep,
+  [StepType.CSV_WRITE]: CsvWriteStep,
+  [StepType.HTTP]: HttpStep,
+  [StepType.SHELL]: ShellStep,
+  [StepType.GIT]: GitStep,
 };
 
 /**
  * Create step instance by type
+ * Accepts string input from CLI and validates against StepType enum
  */
 export function createStep(type: string): BaseStep<any, any> {
-  const StepClass = STEP_REGISTRY[type];
+  // Validate that the type is a valid StepType by checking the registry
+  const StepClass = STEP_REGISTRY[type as StepType];
   
   if (!StepClass) {
-    throw new Error(`Unknown step type: ${type}`);
+    const validTypes = Object.values(StepType).join(', ');
+    throw new Error(`Unknown step type: ${type}. Valid types: ${validTypes}`);
   }
   
   return new StepClass();
