@@ -2,7 +2,7 @@
 export { BaseStep, StepContext, StepResult } from './base-step.js';
 export { Workflow, WorkflowOptions, WorkflowResult, StepDefinition } from './workflow.js';
 export { Runner, RunnerOptions } from './runner.js';
-export { LogLevel, StepType, ExitCode } from './enums.js';
+export { LogLevel, StepType, ExitCode, WorkflowId } from './enums.js';
 
 // Logger interface
 export { ILogger, isLogger } from './logger.js';

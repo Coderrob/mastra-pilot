@@ -1,8 +1,7 @@
-import { RunnerAdapter, Workflow, WorkflowExecutionResult } from '@repo/core';
-import { Logger } from 'pino';
+import { RunnerAdapter, Workflow, WorkflowExecutionResult, ILogger } from '@repo/core';
 import { createDevAutoWorkflow } from '@repo/workflows';
 
-type WorkflowFactory = (options: { logger: Logger }) => Workflow;
+type WorkflowFactory = (options: { logger: ILogger }) => Workflow;
 
 const WORKFLOW_REGISTRY: Record<string, WorkflowFactory> = {
   'dev-auto': createDevAutoWorkflow,
@@ -11,7 +10,7 @@ const WORKFLOW_REGISTRY: Record<string, WorkflowFactory> = {
 /**
  * Create workflow instance by name
  */
-export function createWorkflow(name: string, logger: Logger): Workflow {
+export function createWorkflow(name: string, logger: ILogger): Workflow {
   const factory = WORKFLOW_REGISTRY[name];
   
   if (!factory) {
@@ -27,7 +26,7 @@ export function createWorkflow(name: string, logger: Logger): Workflow {
 export async function executeWorkflow(
   name: string,
   input: unknown,
-  logger: Logger
+  logger: ILogger
 ): Promise<WorkflowExecutionResult> {
   const runner = new RunnerAdapter({ logger });
   const workflow = createWorkflow(name, logger);
@@ -41,7 +40,7 @@ export async function executeWorkflow(
 export async function executeWorkflows(
   names: string[],
   input: unknown,
-  logger: Logger,
+  logger: ILogger,
   parallel: boolean
 ): Promise<WorkflowExecutionResult[]> {
   const runner = new RunnerAdapter({ logger });

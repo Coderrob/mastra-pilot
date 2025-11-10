@@ -95,3 +95,17 @@ export function hasGetName(obj: unknown): obj is { getName: () => string } {
 export function hasExecute(obj: unknown): obj is { execute: (...args: unknown[]) => Promise<unknown> } {
   return hasProperty(obj, 'execute') && isFunction(obj.execute);
 }
+
+/**
+ * Type guard to check if value is null or undefined
+ */
+export function isNullOrUndefined(value: unknown): value is null | undefined {
+  return !isDefined(value);
+}
+
+/**
+ * Type guard to check if value is a number or boolean (excludes string)
+ */
+export function isNumericOrBoolean(value: unknown): value is number | boolean {
+  return isNumber(value) || isBoolean(value);
+}

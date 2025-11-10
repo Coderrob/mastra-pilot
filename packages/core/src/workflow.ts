@@ -1,14 +1,14 @@
 import { BaseStep, StepContext, StepResult } from './base-step.js';
-import { Logger } from 'pino';
+import { ILogger } from './logger.js';
 
 export type StepDefinition = {
-  step: BaseStep<any, any>;
+  step: BaseStep<unknown, unknown>;
   name: string;
 };
 
 export interface WorkflowOptions {
   name: string;
-  logger: Logger;
+  logger: ILogger;
   continueOnError?: boolean;
 }
 
@@ -18,7 +18,7 @@ export interface WorkflowOptions {
 export class Workflow {
   private readonly name: string;
   private readonly steps: StepDefinition[] = [];
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
   private readonly continueOnError: boolean;
 
   constructor(options: WorkflowOptions) {
@@ -27,7 +27,7 @@ export class Workflow {
     this.continueOnError = options.continueOnError ?? false;
   }
 
-  addStep(step: BaseStep<any, any>, name?: string): this {
+  addStep(step: BaseStep<unknown, unknown>, name?: string): this {
     this.steps.push({
       step,
       name: name ?? step.getName(),
@@ -42,7 +42,7 @@ export class Workflow {
     const startTime = Date.now();
     this.logger.info({ workflow: this.name }, 'Workflow execution started');
 
-    const results: StepResult<any>[] = [];
+    const results: StepResult<unknown>[] = [];
     let currentInput = initialInput;
 
     const context: StepContext = {
@@ -98,7 +98,7 @@ export class Workflow {
 
 export interface WorkflowResult {
   success: boolean;
-  results: StepResult<any>[];
+  results: StepResult<unknown>[];
   error?: Error;
   duration: number;
 }

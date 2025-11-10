@@ -32,3 +32,10 @@ export enum ExitCode {
   CONFIGURATION_ERROR = 4,
   RUNTIME_ERROR = 5,
 }
+
+/**
+ * Workflow identifier enum for known workflows
+ */
+export enum WorkflowId {
+  DEV_AUTO = 'dev-auto',
+}

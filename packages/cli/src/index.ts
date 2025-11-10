@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { WorkflowId } from '@repo/core';
 import { createLogger, createOutputWriter, parseInput, handleSuccess, handleError } from './utils.js';
 import { createStep, executeStep } from './step-executor.js';
 import { executeWorkflow, executeWorkflows } from './workflow-executor.js';
@@ -74,7 +75,7 @@ program
     
     try {
       const input = parseInput(options);
-      const names = options.workflows || ['dev-auto'];
+      const names = options.workflows || [WorkflowId.DEV_AUTO];
       const results = await executeWorkflows(names, input, logger, options.parallel);
       
       if (!results.every(r => r.success)) {

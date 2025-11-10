@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { ExitCode } from '@repo/core';
+import { isNullOrUndefined, isString, isNumericOrBoolean } from '@repo/utils';
 
 /**
  * Output message level
@@ -63,15 +64,15 @@ export class ConsoleOutputWriter implements IOutputWriter {
    * Format data for output
    */
   private formatData(data: unknown): string {
-    if (data === undefined || data === null) {
+    if (isNullOrUndefined(data)) {
       return '';
     }
 
-    if (typeof data === 'string') {
+    if (isString(data)) {
       return chalk.cyan(data);
     }
 
-    if (typeof data === 'number' || typeof data === 'boolean') {
+    if (isNumericOrBoolean(data)) {
       return chalk.yellow(String(data));
     }
 
