@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from '@repo/core';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import { FileUtils, CsvUtils } from '@repo/utils';
 import { z } from 'zod';
 
@@ -29,7 +29,7 @@ export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
 
   protected async run(
     input: CsvWriteInput,
-    _context: StepContext
+    _context: IStepContext
   ): Promise<StepResult<CsvWriteOutput>> {
     try {
       const { path, data, baseDir, header, delimiter, append } = input;

@@ -1,21 +1,35 @@
 import { Workflow, WorkflowResult } from './workflow.js';
-import pino, { Logger } from 'pino';
+import pino from 'pino';
 import { LogLevel } from './enums.js';
+import { ILogger } from './logger.js';
 
-export interface RunnerOptions {
-  logger?: Logger;
+export interface IRunnerOptions {
+  logger?: ILogger;
   logLevel?: LogLevel;
+}
+
+/**
+ * Runner interface for workflow execution
+ * Defines contract for workflow orchestration with Strategy pattern
+ */
+export interface IRunner {
+  registerWorkflow(workflow: Workflow): this;
+  runWorkflow(name: string, input?: unknown, metadata?: Record<string, unknown>): Promise<WorkflowResult>;
+  runWorkflowsParallel(workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>): Promise<WorkflowResult[]>;
+  runWorkflowsSequential(workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>): Promise<WorkflowResult[]>;
+  getWorkflows(): string[];
+  getLogger(): ILogger;
 }
 
 /**
  * Runner implements the Strategy pattern for executing workflows
  * Provides different execution strategies and observability
  */
-export class Runner {
-  private readonly logger: Logger;
+export class Runner implements IRunner {
+  private readonly logger: ILogger;
   private readonly workflows: Map<string, Workflow> = new Map();
 
-  constructor(options: RunnerOptions = {}) {
+  constructor(options: IRunnerOptions = {}) {
     this.logger = options.logger ?? pino({
       level: options.logLevel ?? LogLevel.INFO,
       transport: {
@@ -83,7 +97,7 @@ export class Runner {
     return Array.from(this.workflows.keys());
   }
 
-  getLogger(): Logger {
+  getLogger(): ILogger {
     return this.logger;
   }
 }

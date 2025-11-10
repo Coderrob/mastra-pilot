@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from '@repo/core';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { z } from 'zod';
 
@@ -31,7 +31,7 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
 
   protected async run(
     input: HttpInput,
-    _context: StepContext
+    _context: IStepContext
   ): Promise<StepResult<HttpOutput>> {
     try {
       const { url, method, headers, data, params, timeout } = input;

@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from './base-step.js';
+import { BaseStep, IStepContext, StepResult } from './base-step.js';
 import { ILogger } from './logger.js';
 
 export type StepDefinition = {
@@ -45,7 +45,7 @@ export class Workflow {
     const results: StepResult<unknown>[] = [];
     let currentInput = initialInput;
 
-    const context: StepContext = {
+    const context: IStepContext = {
       logger: this.logger.child({ workflow: this.name }),
       metadata,
     };

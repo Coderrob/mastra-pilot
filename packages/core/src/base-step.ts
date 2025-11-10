@@ -6,9 +6,6 @@ export interface IStepContext {
   metadata: Record<string, unknown>;
 }
 
-// Alias for backward compatibility
-export type StepContext = IStepContext;
-
 export interface StepResult<TOut> {
   success: boolean;
   data?: TOut;
@@ -38,7 +35,7 @@ export abstract class BaseStep<TIn = unknown, TOut = unknown> {
   /**
    * Execute the step with input validation
    */
-  async execute(input: TIn, context: StepContext): Promise<StepResult<TOut>> {
+  async execute(input: TIn, context: IStepContext): Promise<StepResult<TOut>> {
     const startTime = Date.now();
     context.logger.info({ step: this.name, input }, 'Step execution started');
 
@@ -82,7 +79,7 @@ export abstract class BaseStep<TIn = unknown, TOut = unknown> {
   /**
    * Abstract method to be implemented by concrete steps
    */
-  protected abstract run(input: TIn, context: StepContext): Promise<StepResult<TOut>>;
+  protected abstract run(input: TIn, context: IStepContext): Promise<StepResult<TOut>>;
 
   /**
    * Get step name

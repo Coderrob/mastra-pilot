@@ -24,9 +24,6 @@ export interface IRunnerAdapterOptions {
   provider?: IWorkflowProvider;
 }
 
-// Alias for backward compatibility
-export type RunnerAdapterOptions = IRunnerAdapterOptions;
-
 /**
  * RunnerAdapter - Adapter pattern for executing workflows through provider abstraction
  * Supports both legacy workflows and provider-based workflows (Mastra, LangGraph, etc.)

@@ -1,17 +1,17 @@
-import { RunnerAdapter, Workflow, WorkflowExecutionResult, ILogger } from '@repo/core';
+import { RunnerAdapter, Workflow, WorkflowExecutionResult, ILogger, WorkflowId } from '@repo/core';
 import { createDevAutoWorkflow } from '@repo/workflows';
 
 type WorkflowFactory = (options: { logger: ILogger }) => Workflow;
 
-const WORKFLOW_REGISTRY: Record<string, WorkflowFactory> = {
-  'dev-auto': createDevAutoWorkflow,
+const WORKFLOW_REGISTRY: Record<WorkflowId, WorkflowFactory> = {
+  [WorkflowId.DEV_AUTO]: createDevAutoWorkflow,
 };
 
 /**
  * Create workflow instance by name
  */
 export function createWorkflow(name: string, logger: ILogger): Workflow {
-  const factory = WORKFLOW_REGISTRY[name];
+  const factory = WORKFLOW_REGISTRY[name as WorkflowId];
   
   if (!factory) {
     throw new Error(`Unknown workflow: ${name}`);

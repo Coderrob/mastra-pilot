@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from '@repo/core';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git';
 import { z } from 'zod';
 
@@ -31,7 +31,7 @@ export class GitStep extends BaseStep<GitInput, GitOutput> {
 
   protected async run(
     input: GitInput,
-    _context: StepContext
+    _context: IStepContext
   ): Promise<StepResult<GitOutput>> {
     try {
       const { action, repoPath, message, files, remote, branch, url } = input;

@@ -26,7 +26,7 @@ const STEP_REGISTRY: Record<StepType, StepConstructor> = {
  * Accepts string input from CLI and validates against StepType enum
  * @throws {UnknownStepTypeError} When step type is not recognized
  */
-export function createStep(type: string): BaseStep<any, any> {
+export function createStep<TIn = unknown, TOut = unknown>(type: string): BaseStep<TIn, TOut> {
   // Validate that the type is a valid StepType by checking the registry
   const StepClass = STEP_REGISTRY[type as StepType];
   

@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from '@repo/core';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import { execa, ExecaReturnValue } from 'execa';
 import { z } from 'zod';
 
@@ -40,7 +40,7 @@ export class ShellStep extends BaseStep<ShellInput, ShellOutput> {
 
   protected async run(
     input: ShellInput,
-    _context: StepContext
+    _context: IStepContext
   ): Promise<StepResult<ShellOutput>> {
     try {
       const { command, args, cwd, env, timeout, shell } = input;

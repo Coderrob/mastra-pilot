@@ -4,12 +4,26 @@
  */
 
 /**
+ * Error name enum for consistent error identification
+ */
+export enum ErrorName {
+  WORKFLOW_ERROR = 'WorkflowError',
+  UNKNOWN_STEP_TYPE_ERROR = 'UnknownStepTypeError',
+  STEP_VALIDATION_ERROR = 'StepValidationError',
+  WORKFLOW_VALIDATION_ERROR = 'WorkflowValidationError',
+  WORKFLOW_EXECUTION_ERROR = 'WorkflowExecutionError',
+  STEP_EXECUTION_ERROR = 'StepExecutionError',
+  CONFIGURATION_ERROR = 'ConfigurationError',
+  INPUT_PARSE_ERROR = 'InputParseError',
+}
+
+/**
  * Base error for workflow automation errors
  */
 export class WorkflowError extends Error {
   constructor(message: string, public readonly context?: Record<string, unknown>) {
     super(message);
-    this.name = 'WorkflowError';
+    this.name = ErrorName.WORKFLOW_ERROR;
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -26,7 +40,7 @@ export class UnknownStepTypeError extends WorkflowError {
       stepType,
       validTypes,
     });
-    this.name = 'UnknownStepTypeError';
+    this.name = ErrorName.UNKNOWN_STEP_TYPE_ERROR;
   }
 }
 
@@ -40,7 +54,7 @@ export class StepValidationError extends WorkflowError {
     public readonly validationErrors?: unknown
   ) {
     super(message, { stepId, validationErrors });
-    this.name = 'StepValidationError';
+    this.name = ErrorName.STEP_VALIDATION_ERROR;
   }
 }
 
@@ -54,7 +68,7 @@ export class WorkflowValidationError extends WorkflowError {
     public readonly validationErrors?: unknown
   ) {
     super(message, { workflowId, validationErrors });
-    this.name = 'WorkflowValidationError';
+    this.name = ErrorName.WORKFLOW_VALIDATION_ERROR;
   }
 }
 
@@ -68,7 +82,7 @@ export class WorkflowExecutionError extends WorkflowError {
     public readonly cause?: Error
   ) {
     super(message, { workflowId, cause: cause?.message });
-    this.name = 'WorkflowExecutionError';
+    this.name = ErrorName.WORKFLOW_EXECUTION_ERROR;
     if (cause) {
       this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
     }
@@ -85,7 +99,7 @@ export class StepExecutionError extends WorkflowError {
     public readonly cause?: Error
   ) {
     super(message, { stepId, cause: cause?.message });
-    this.name = 'StepExecutionError';
+    this.name = ErrorName.STEP_EXECUTION_ERROR;
     if (cause) {
       this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
     }
@@ -101,7 +115,7 @@ export class ConfigurationError extends WorkflowError {
     public readonly configKey?: string
   ) {
     super(message, { configKey });
-    this.name = 'ConfigurationError';
+    this.name = ErrorName.CONFIGURATION_ERROR;
   }
 }
 
@@ -115,7 +129,7 @@ export class InputParseError extends WorkflowError {
     public readonly cause?: Error
   ) {
     super(message, { source, cause: cause?.message });
-    this.name = 'InputParseError';
+    this.name = ErrorName.INPUT_PARSE_ERROR;
     if (cause) {
       this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
     }

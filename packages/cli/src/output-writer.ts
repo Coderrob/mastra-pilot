@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ExitCode } from '@repo/core';
-import { isNullOrUndefined, isString, isNumericOrBoolean } from '@repo/utils';
+import { isNullOrUndefined, isString, isNumericOrBoolean, isNumber, isBoolean } from '@repo/utils';
 
 /**
  * Output message level
@@ -175,13 +175,13 @@ export class ConsoleOutputWriter implements IOutputWriter {
           const strValue = String(value ?? '').padEnd(widths[i]);
           
           // Color based on type
-          if (value === null || value === undefined) {
+          if (isNullOrUndefined(value)) {
             return chalk.gray(strValue);
           }
-          if (typeof value === 'boolean') {
+          if (isBoolean(value)) {
             return value ? chalk.green(strValue) : chalk.red(strValue);
           }
-          if (typeof value === 'number') {
+          if (isNumber(value)) {
             return chalk.yellow(strValue);
           }
           return strValue;

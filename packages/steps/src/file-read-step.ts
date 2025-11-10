@@ -1,4 +1,4 @@
-import { BaseStep, StepContext, StepResult } from '@repo/core';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import { FileUtils } from '@repo/utils';
 import { z } from 'zod';
 
@@ -28,7 +28,7 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
 
   protected async run(
     input: FileReadInput,
-    _context: StepContext
+    _context: IStepContext
   ): Promise<StepResult<FileReadOutput>> {
     try {
       const { path, from, to, baseDir } = input;
