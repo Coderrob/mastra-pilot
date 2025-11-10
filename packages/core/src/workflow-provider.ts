@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { Logger } from 'pino';
+import { ILogger } from './logger.js';
 
 /**
  * Step execution context with typed dependencies
  */
-export interface StepExecutionContext {
-  logger?: Logger;
+export interface IStepExecutionContext {
+  logger?: ILogger;
   metadata?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -13,65 +13,65 @@ export interface StepExecutionContext {
 /**
  * Step instance returned by createStep
  */
-export interface StepInstance<TIn = unknown, TOut = unknown> {
+export interface IStepInstance<TIn = unknown, TOut = unknown> {
   id: string;
   description?: string;
   inputSchema?: z.ZodType<TIn>;
   outputSchema?: z.ZodType<TOut>;
-  execute: (input: TIn, context: StepExecutionContext) => Promise<TOut>;
+  execute: (input: TIn, context: IStepExecutionContext) => Promise<TOut>;
 }
 
 /**
  * Workflow instance returned by createWorkflow
  */
-export interface WorkflowInstance<TIn = unknown, TOut = unknown> {
+export interface IWorkflowInstance<TIn = unknown, TOut = unknown> {
   id: string;
   name?: string;
   description?: string;
   inputSchema?: z.ZodType<TIn>;
   outputSchema?: z.ZodType<TOut>;
-  steps: ReadonlyArray<StepInstance>;
-  execute?: (input: TIn, context?: WorkflowExecutionContext) => Promise<TOut>;
+  steps: ReadonlyArray<IStepInstance>;
+  execute?: (input: TIn, context?: IWorkflowExecutionContext) => Promise<TOut>;
 }
 
 /**
  * Generic workflow provider interface
  * Allows swapping between Mastra, LangGraph, or other workflow engines
  */
-export interface WorkflowProvider {
-  createStep<TIn = unknown, TOut = unknown>(config: StepConfig<TIn, TOut>): StepInstance<TIn, TOut>;
-  createWorkflow<TIn = unknown, TOut = unknown>(config: WorkflowConfig<TIn, TOut>): WorkflowInstance<TIn, TOut>;
+export interface IWorkflowProvider {
+  createStep<TIn = unknown, TOut = unknown>(config: IStepConfig<TIn, TOut>): IStepInstance<TIn, TOut>;
+  createWorkflow<TIn = unknown, TOut = unknown>(config: IWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut>;
   execute<TIn = unknown, TOut = unknown>(
-    workflow: WorkflowInstance<TIn, TOut>,
+    workflow: IWorkflowInstance<TIn, TOut>,
     input: TIn,
-    context?: WorkflowExecutionContext
-  ): Promise<WorkflowExecutionResult<TOut>>;
+    context?: IWorkflowExecutionContext
+  ): Promise<IWorkflowExecutionResult<TOut>>;
 }
 
-export interface StepConfig<TIn = unknown, TOut = unknown> {
+export interface IStepConfig<TIn = unknown, TOut = unknown> {
   id: string;
   description?: string;
   inputSchema?: z.ZodType<TIn>;
   outputSchema?: z.ZodType<TOut>;
-  execute: (input: TIn, context: StepExecutionContext) => Promise<TOut>;
+  execute: (input: TIn, context: IStepExecutionContext) => Promise<TOut>;
 }
 
-export interface WorkflowConfig<TIn = unknown, TOut = unknown> {
+export interface IWorkflowConfig<TIn = unknown, TOut = unknown> {
   id: string;
   name: string;
   description?: string;
   inputSchema?: z.ZodType<TIn>;
   outputSchema?: z.ZodType<TOut>;
-  steps: ReadonlyArray<StepInstance>;
+  steps: ReadonlyArray<IStepInstance>;
 }
 
-export interface WorkflowExecutionContext {
-  logger?: Logger;
+export interface IWorkflowExecutionContext {
+  logger?: ILogger;
   metadata?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
-export interface WorkflowExecutionResult<TOut = unknown> {
+export interface IWorkflowExecutionResult<TOut = unknown> {
   success: boolean;
   data?: TOut;
   error?: Error;

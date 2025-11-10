@@ -1,5 +1,4 @@
-import { BaseStep, StepResult, StepType } from '@repo/core';
-import { Logger } from 'pino';
+import { BaseStep, StepResult, StepType, UnknownStepTypeError, ILogger } from '@repo/core';
 import {
   FileReadStep,
   CsvWriteStep,
@@ -25,14 +24,15 @@ const STEP_REGISTRY: Record<StepType, StepConstructor> = {
 /**
  * Create step instance by type
  * Accepts string input from CLI and validates against StepType enum
+ * @throws {UnknownStepTypeError} When step type is not recognized
  */
 export function createStep(type: string): BaseStep<any, any> {
   // Validate that the type is a valid StepType by checking the registry
   const StepClass = STEP_REGISTRY[type as StepType];
   
   if (!StepClass) {
-    const validTypes = Object.values(StepType).join(', ');
-    throw new Error(`Unknown step type: ${type}. Valid types: ${validTypes}`);
+    const validTypes = Object.values(StepType);
+    throw new UnknownStepTypeError(type, validTypes);
   }
   
   return new StepClass();
@@ -44,7 +44,7 @@ export function createStep(type: string): BaseStep<any, any> {
 export async function executeStep<TIn, TOut>(
   step: BaseStep<TIn, TOut>,
   input: TIn,
-  logger: Logger
+  logger: ILogger
 ): Promise<StepResult<TOut>> {
   return step.execute(input, { logger, metadata: {} });
 }

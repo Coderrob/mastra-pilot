@@ -1,10 +1,13 @@
 import { z } from 'zod';
-import { Logger } from 'pino';
+import { ILogger } from './logger.js';
 
-export interface StepContext {
-  logger: Logger;
+export interface IStepContext {
+  logger: ILogger;
   metadata: Record<string, unknown>;
 }
+
+// Alias for backward compatibility
+export type StepContext = IStepContext;
 
 export interface StepResult<TOut> {
   success: boolean;

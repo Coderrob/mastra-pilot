@@ -1,107 +1,142 @@
 import { z } from 'zod';
-import { createStep as mastraCreateStep, createWorkflow as mastraCreateWorkflow } from '@mastra/core';
-import { isObject } from '@repo/utils';
 import type { 
-  WorkflowProvider, 
-  StepConfig, 
-  WorkflowConfig as ProviderWorkflowConfig, 
-  WorkflowExecutionContext,
-  WorkflowInstance,
-  StepInstance,
-  WorkflowExecutionResult,
-  StepExecutionContext
+  IWorkflowProvider, 
+  IStepConfig, 
+  IWorkflowConfig as ProviderWorkflowConfig, 
+  IWorkflowExecutionContext,
+  IWorkflowInstance,
+  IStepInstance,
+  IWorkflowExecutionResult,
+  IStepExecutionContext
 } from '../workflow-provider.js';
 
 /**
- * Mastra execution context structure
- */
-interface MastraExecutionContext {
-  machineContext?: {
-    inputData?: unknown;
-  };
-  inputData?: unknown;
-  runtimeContext?: {
-    get?: (key: string) => unknown;
-  };
-}
-
-/**
- * Type guard to check if context is MastraExecutionContext
- */
-function isMastraContext(context: unknown): context is MastraExecutionContext {
-  return isObject(context);
-}
-
-/**
  * Mastra workflow provider adapter
- * Wraps Mastra's workflow system with our provider interface
+ * Note: This is a simplified implementation providing type-safe workflow execution.
+ * Full Mastra integration pending API stabilization in future versions.
+ * The adapter provides the structure for future integration while maintaining type safety.
  */
-export class MastraAdapter implements WorkflowProvider {
-  createStep<TIn = unknown, TOut = unknown>(config: StepConfig<TIn, TOut>): StepInstance<TIn, TOut> {
+export class MastraAdapter implements IWorkflowProvider {
+  createStep<TIn = unknown, TOut = unknown>(config: IStepConfig<TIn, TOut>): IStepInstance<TIn, TOut> {
     const { id, description, inputSchema, outputSchema, execute } = config;
 
-    return mastraCreateStep({
+    // Use provided schemas or create default ones if not specified
+    const effectiveInputSchema = inputSchema || z.unknown() as z.ZodType<TIn>;
+    const effectiveOutputSchema = outputSchema || z.unknown() as z.ZodType<TOut>;
+
+    // Create a step instance that matches IStepInstance interface
+    // This provides type-safe execution with Zod schema validation
+    return {
       id,
       description,
-      inputSchema: inputSchema || z.unknown(),
-      outputSchema: outputSchema || z.unknown(),
-      execute: async (context: unknown) => {
-        // Extract input and custom context from Mastra's execution context
-        let input: TIn;
-        let customContext: StepExecutionContext = {};
-
-        if (isMastraContext(context)) {
-          input = (context.machineContext?.inputData || context.inputData || {}) as TIn;
-          const runtimeCustomContext = context.runtimeContext?.get?.('customContext');
-          if (typeof runtimeCustomContext === 'object' && runtimeCustomContext !== null) {
-            customContext = runtimeCustomContext as StepExecutionContext;
+      inputSchema: effectiveInputSchema,
+      outputSchema: effectiveOutputSchema,
+      execute: async (input: TIn, context: IStepExecutionContext) => {
+        // Validate input using Zod schema if provided
+        if (inputSchema) {
+          const parseResult = effectiveInputSchema.safeParse(input);
+          if (!parseResult.success) {
+            throw new Error(`Input validation failed: ${parseResult.error.message}`);
           }
-        } else {
-          input = {} as TIn;
         }
-        
-        // Merge contexts for dependency injection
-        const mergedContext: StepExecutionContext = {
-          ...customContext,
-          mastraContext: context,
-        };
 
-        return execute(input, mergedContext);
+        // Execute the user's function with validated input and context
+        const result = await execute(input, context);
+
+        // Validate output using Zod schema if provided
+        if (outputSchema) {
+          const parseResult = effectiveOutputSchema.safeParse(result);
+          if (!parseResult.success) {
+            throw new Error(`Output validation failed: ${parseResult.error.message}`);
+          }
+        }
+
+        return result;
       },
-    }) as StepInstance<TIn, TOut>;
+    };
   }
 
-  createWorkflow<TIn = unknown, TOut = unknown>(config: ProviderWorkflowConfig<TIn, TOut>): WorkflowInstance<TIn, TOut> {
-    const { id, description, inputSchema, outputSchema, steps } = config;
+  createWorkflow<TIn = unknown, TOut = unknown>(config: ProviderWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut> {
+    const { id, name, description, inputSchema, outputSchema, steps } = config;
 
-    // Create the workflow using Mastra's createWorkflow
-    const mastraWorkflow = mastraCreateWorkflow({
+    // Use provided schemas or create default ones if not specified
+    const effectiveInputSchema = inputSchema || z.unknown() as z.ZodType<TIn>;
+    const effectiveOutputSchema = outputSchema || z.unknown() as z.ZodType<TOut>;
+
+    // Create a workflow instance that matches IWorkflowInstance interface
+    // This provides type-safe workflow composition with schema validation
+    return {
       id,
+      name,
       description,
-      inputSchema: inputSchema || z.unknown(),
-      outputSchema: outputSchema || z.unknown(),
-      steps: [...steps] as never[], // Cast needed due to Mastra's type requirements
-    });
+      inputSchema: effectiveInputSchema,
+      outputSchema: effectiveOutputSchema,
+      steps: Object.freeze([...steps]),
+      execute: async (input: TIn, context?: IWorkflowExecutionContext) => {
+        // Validate workflow input
+        if (inputSchema) {
+          const parseResult = effectiveInputSchema.safeParse(input);
+          if (!parseResult.success) {
+            throw new Error(`Workflow input validation failed: ${parseResult.error.message}`);
+          }
+        }
 
-    // Return as WorkflowInstance (structural compatibility)
-    return mastraWorkflow as unknown as WorkflowInstance<TIn, TOut>;
+        // Execute steps sequentially, passing output to next step
+        let currentInput: unknown = input;
+        for (const step of steps) {
+          currentInput = await step.execute(currentInput, context || {});
+        }
+
+        // Validate workflow output
+        const output = currentInput as TOut;
+        if (outputSchema) {
+          const parseResult = effectiveOutputSchema.safeParse(output);
+          if (!parseResult.success) {
+            throw new Error(`Workflow output validation failed: ${parseResult.error.message}`);
+          }
+        }
+
+        return output;
+      },
+    };
   }
 
   async execute<TIn = unknown, TOut = unknown>(
-    _workflow: WorkflowInstance<TIn, TOut>,
+    workflow: IWorkflowInstance<TIn, TOut>,
     input: TIn,
-    _context?: WorkflowExecutionContext
-  ): Promise<WorkflowExecutionResult<TOut>> {
-    // For now, return a simplified result
-    // Full Mastra integration requires a Mastra instance with execution engine
-    // This adapter provides the structure for future full integration
+    context?: IWorkflowExecutionContext
+  ): Promise<IWorkflowExecutionResult<TOut>> {
+    const startTime = Date.now();
     
-    return {
-      success: true,
-      data: input as unknown as TOut,
-      error: undefined,
-      results: Object.freeze([]),
-      duration: 0,
-    };
+    try {
+      // Execute workflow using its execute function if available
+      let data: TOut;
+      if (workflow.execute) {
+        data = await workflow.execute(input, context);
+      } else {
+        // Fallback: execute steps sequentially
+        let currentInput: unknown = input;
+        for (const step of workflow.steps) {
+          currentInput = await step.execute(currentInput, context || {});
+        }
+        data = currentInput as TOut;
+      }
+
+      return {
+        success: true,
+        data,
+        error: undefined,
+        results: Object.freeze([]),
+        duration: Date.now() - startTime,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: undefined,
+        error: error instanceof Error ? error : new Error(String(error)),
+        results: Object.freeze([]),
+        duration: Date.now() - startTime,
+      };
+    }
   }
 }

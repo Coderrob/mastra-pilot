@@ -1,9 +1,11 @@
-import pino, { Logger } from 'pino';
+import pino from 'pino';
 import { LogLevel } from './enums.js';
-import { WorkflowFacade, WorkflowExecutionResult } from './workflow-facade.js';
-import { WorkflowProvider, WorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
+import { ILogger } from './logger.js';
+import { WorkflowFacade, IWorkflowExecutionResult } from './workflow-facade.js';
+import { IWorkflowProvider, IWorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
 import { Workflow } from './workflow.js';
+import { WorkflowExecutionError } from './errors.js';
 import { hasId, hasGetName } from '@repo/utils';
 
 /**
@@ -16,23 +18,26 @@ export type WorkflowInstance = Workflow | {
   [key: string]: unknown;
 };
 
-export interface RunnerAdapterOptions {
-  logger?: Logger;
+export interface IRunnerAdapterOptions {
+  logger?: ILogger;
   logLevel?: LogLevel;
-  provider?: WorkflowProvider;
+  provider?: IWorkflowProvider;
 }
+
+// Alias for backward compatibility
+export type RunnerAdapterOptions = IRunnerAdapterOptions;
 
 /**
  * RunnerAdapter - Adapter pattern for executing workflows through provider abstraction
  * Supports both legacy workflows and provider-based workflows (Mastra, LangGraph, etc.)
  */
 export class RunnerAdapter {
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
   private readonly facade: WorkflowFacade;
   private readonly workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
-  constructor(options: RunnerAdapterOptions = {}) {
-    this.logger = options.logger ?? pino({
+  constructor(options: IRunnerAdapterOptions = {}) {
+    this.logger = options.logger ?? (pino({
       level: options.logLevel ?? LogLevel.INFO,
       transport: {
         target: 'pino-pretty',
@@ -40,7 +45,7 @@ export class RunnerAdapter {
           colorize: true,
         },
       },
-    });
+    }) as ILogger);
 
     // Use provided adapter or default to Mastra
     const provider = options.provider || new MastraAdapter();
@@ -74,16 +79,17 @@ export class RunnerAdapter {
 
   /**
    * Execute a workflow by ID
+   * @throws {WorkflowExecutionError} When workflow is not found
    */
   async runWorkflow(
     id: string,
     input?: unknown,
     context?: Record<string, unknown>
-  ): Promise<WorkflowExecutionResult> {
+  ): Promise<IWorkflowExecutionResult> {
     const workflow = this.workflows.get(id);
     
     if (!workflow) {
-      const error = new Error(`Workflow '${id}' not found`);
+      const error = new WorkflowExecutionError(`Workflow '${id}' not found`, id);
       this.logger.error({ workflow: id }, error.message);
       throw error;
     }
@@ -105,8 +111,8 @@ export class RunnerAdapter {
    * Execute multiple workflows in parallel
    */
   async runWorkflowsParallel(
-    workflows: Array<{ id: string; input?: unknown; context?: Record<string, unknown> }>
-  ): Promise<WorkflowExecutionResult[]> {
+    workflows: ReadonlyArray<{ id: string; input?: unknown; context?: Record<string, unknown> }>
+  ): Promise<IWorkflowExecutionResult[]> {
     this.logger.info({ count: workflows.length }, 'Starting parallel workflow execution');
 
     const promises = workflows.map(({ id, input, context }) =>
@@ -120,11 +126,11 @@ export class RunnerAdapter {
    * Execute multiple workflows sequentially
    */
   async runWorkflowsSequential(
-    workflows: Array<{ id: string; input?: unknown; context?: Record<string, unknown> }>
-  ): Promise<WorkflowExecutionResult[]> {
+    workflows: ReadonlyArray<{ id: string; input?: unknown; context?: Record<string, unknown> }>
+  ): Promise<IWorkflowExecutionResult[]> {
     this.logger.info({ count: workflows.length }, 'Starting sequential workflow execution');
 
-    const results: WorkflowExecutionResult[] = [];
+    const results: IWorkflowExecutionResult[] = [];
     let currentInput: unknown;
 
     for (const { id, input, context } of workflows) {
@@ -150,7 +156,7 @@ export class RunnerAdapter {
   /**
    * Get the logger instance
    */
-  getLogger(): Logger {
+  getLogger(): ILogger {
     return this.logger;
   }
 
