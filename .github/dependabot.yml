@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Only allow minor and patch version updates
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Coderrob"
+    labels:
+      - "dependencies"
+      - "automated"
+    ignore:
+      # Ignore major version updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    reviewers:
+      - "Coderrob"
+    labels:
+      - "dependencies"
+      - "github-actions"
