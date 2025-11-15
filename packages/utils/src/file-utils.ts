@@ -1,5 +1,7 @@
-import fs from 'fs-extra';
-import path from 'path';
+import fs from "fs-extra";
+import path from "node:path";
+
+const DEFAULT_ENCODING: BufferEncoding = "utf-8";
 
 /**
  * Secure file operations with path validation
@@ -11,9 +13,11 @@ export class FileUtils {
   static validatePath(filePath: string, baseDir: string): void {
     const resolvedPath = path.resolve(filePath);
     const resolvedBase = path.resolve(baseDir);
-    
+
     if (!resolvedPath.startsWith(resolvedBase)) {
-      throw new Error(`Path traversal detected: ${filePath} is outside ${baseDir}`);
+      throw new Error(
+        `Path traversal detected: ${filePath} is outside ${baseDir}`
+      );
     }
   }
 
@@ -23,7 +27,7 @@ export class FileUtils {
   static async readFileSafe(
     filePath: string,
     baseDir: string,
-    encoding: BufferEncoding = 'utf-8'
+    encoding: BufferEncoding = DEFAULT_ENCODING
   ): Promise<string> {
     this.validatePath(filePath, baseDir);
     return fs.readFile(filePath, encoding);
@@ -36,7 +40,7 @@ export class FileUtils {
     filePath: string,
     content: string,
     baseDir: string,
-    encoding: BufferEncoding = 'utf-8'
+    encoding: BufferEncoding = DEFAULT_ENCODING
   ): Promise<void> {
     this.validatePath(filePath, baseDir);
     await fs.ensureDir(path.dirname(filePath));
@@ -53,12 +57,12 @@ export class FileUtils {
     baseDir: string
   ): Promise<string[]> {
     this.validatePath(filePath, baseDir);
-    const content = await fs.readFile(filePath, 'utf-8');
-    const lines = content.split('\n');
-    
+    const content = await fs.readFile(filePath, DEFAULT_ENCODING);
+    const lines = content.split("\n");
+
     const startLine = Math.max(0, from - 1);
     const endLine = to === -1 ? lines.length : Math.min(lines.length, to);
-    
+
     return lines.slice(startLine, endLine);
   }
 

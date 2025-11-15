@@ -6,7 +6,7 @@ The workflow system now uses an **Adapter Pattern** to support multiple workflow
 
 ## Architecture
 
-```
+```text
 ┌─────────────────┐
 │  Application    │
 └────────┬────────┘

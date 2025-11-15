@@ -45,9 +45,10 @@ export class CsvUtils {
       const values = lines[i].split(delimiter);
       const obj: Record<string, string> = {};
 
-      headers.forEach((header, index) => {
+      for (let index = 0; index < headers.length; index++) {
+        const header = headers[index];
         obj[header] = values[index]?.trim() || "";
-      });
+      }
 
       result.push(obj);
     }

@@ -1,20 +1,23 @@
-import { BaseStep } from '@repo/core';
-import { FileReadStep } from './file-read-step.js';
-import { CsvWriteStep } from './csv-write-step.js';
-import { HttpStep } from './http-step.js';
-import { ShellStep } from './shell-step.js';
-import { GitStep } from './git-step.js';
+import { BaseStep } from "@repo/core";
+import { FileReadStep } from "./file-read.step.js";
+import { CsvWriteStep } from "./csv-write.step.js";
+import { HttpStep } from "./http.step.js";
+import { ShellStep } from "./shell.step.js";
+import { GitStep } from "./git.step.js";
 
 /**
  * StepFactory implements the Factory pattern for creating step instances
  */
 export class StepFactory {
-  private static readonly stepRegistry = new Map<string, () => BaseStep<any, any>>([
-    ['file-read', () => new FileReadStep()],
-    ['csv-write', () => new CsvWriteStep()],
-    ['http', () => new HttpStep()],
-    ['shell', () => new ShellStep()],
-    ['git', () => new GitStep()],
+  private static readonly stepRegistry = new Map<
+    string,
+    () => BaseStep<any, any>
+  >([
+    ["file-read", () => new FileReadStep()],
+    ["csv-write", () => new CsvWriteStep()],
+    ["http", () => new HttpStep()],
+    ["shell", () => new ShellStep()],
+    ["git", () => new GitStep()],
   ]);
 
   /**
