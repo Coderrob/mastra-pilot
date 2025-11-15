@@ -1,4 +1,4 @@
-import { stringify } from 'csv-stringify/sync';
+import { stringify } from "csv-stringify/sync";
 
 export interface CsvOptions {
   header?: boolean;
@@ -14,13 +14,11 @@ export class CsvUtils {
   /**
    * Convert array of objects to CSV string
    */
-  static toCSV(data: Record<string, any>[], options: CsvOptions = {}): string {
-    const {
-      header = true,
-      delimiter = ',',
-      quote = '"',
-      columns,
-    } = options;
+  static toCSV(
+    data: Record<string, unknown>[],
+    options: CsvOptions = {}
+  ): string {
+    const { header = true, delimiter = ",", quote = '"', columns } = options;
 
     return stringify(data, {
       header,
@@ -33,21 +31,24 @@ export class CsvUtils {
   /**
    * Parse CSV string to array of objects
    */
-  static parseCSV(csvString: string, delimiter: string = ','): Record<string, string>[] {
-    const lines = csvString.trim().split('\n');
+  static parseCSV(
+    csvString: string,
+    delimiter: string = ","
+  ): Record<string, string>[] {
+    const lines = csvString.trim().split("\n");
     if (lines.length === 0) return [];
 
-    const headers = lines[0].split(delimiter).map(h => h.trim());
+    const headers = lines[0].split(delimiter).map((h) => h.trim());
     const result: Record<string, string>[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(delimiter);
       const obj: Record<string, string> = {};
-      
+
       headers.forEach((header, index) => {
-        obj[header] = values[index]?.trim() || '';
+        obj[header] = values[index]?.trim() || "";
       });
-      
+
       result.push(obj);
     }
 
@@ -57,10 +58,13 @@ export class CsvUtils {
   /**
    * Validate CSV structure
    */
-  static validateCSV(data: Record<string, any>[], requiredColumns: string[]): boolean {
+  static validateCSV(
+    data: Record<string, unknown>[],
+    requiredColumns: string[]
+  ): boolean {
     if (data.length === 0) return false;
 
     const firstRow = data[0];
-    return requiredColumns.every(col => col in firstRow);
+    return requiredColumns.every((col) => col in firstRow);
   }
 }
