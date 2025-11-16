@@ -12,29 +12,33 @@ Thank you for your interest in contributing to Mastra Pilot! This document provi
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Coderrob/mastra-pilot.git
 cd mastra-pilot
 ```
 
-2. Install dependencies:
+1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
-3. Build all packages:
+1. Build all packages:
+
 ```bash
 pnpm build
 ```
 
-4. Run tests:
+1. Run tests:
+
 ```bash
 pnpm test
 ```
 
 ## Project Structure
 
-```
+```text
 mastra-pilot/
 ├── packages/
 │   ├── core/           # Core abstractions
@@ -108,6 +112,7 @@ git commit -m "feat: your feature description"
 ```
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
