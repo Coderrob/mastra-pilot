@@ -151,3 +151,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Quality reports
+reports/
