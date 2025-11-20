@@ -1,7 +1,7 @@
-import { Workflow, WorkflowResult } from './workflow.js';
 import pino from 'pino';
 import { LogLevel } from './enums.js';
 import { ILogger } from './logger.js';
+import { Workflow, WorkflowResult } from './workflow.js';
 
 export interface IRunnerOptions {
   logger?: ILogger;
@@ -30,8 +30,12 @@ export class Runner implements IRunner {
   private readonly workflows: Map<string, Workflow> = new Map();
 
   constructor(options: IRunnerOptions = {}) {
-    this.logger = options.logger ?? pino({
-      level: options.logLevel ?? LogLevel.INFO,
+    this.logger = options.logger ?? this.createDefaultLogger(options.logLevel);
+  }
+
+  private createDefaultLogger(logLevel?: LogLevel): ILogger {
+    return pino({
+      level: logLevel ?? LogLevel.INFO,
       transport: {
         target: 'pino-pretty',
         options: {
@@ -84,13 +88,20 @@ export class Runner implements IRunner {
     for (const { name, input, metadata } of workflows) {
       const result = await this.runWorkflow(name, input ?? currentInput, metadata);
       results.push(result);
-      
-      if (result.success && result.results.length > 0) {
-        currentInput = result.results[result.results.length - 1].data;
-      }
+      currentInput = this.extractNextInput(result, currentInput);
     }
 
     return results;
+  }
+
+  private extractNextInput(result: WorkflowResult, fallback: unknown): unknown {
+    if (!this.hasValidResults(result)) return fallback;
+    const lastResult = result.results.at(-1);
+    return lastResult ? lastResult.data : fallback;
+  }
+
+  private hasValidResults(result: WorkflowResult): boolean {
+    return result.success && result.results.length > 0;
   }
 
   getWorkflows(): string[] {

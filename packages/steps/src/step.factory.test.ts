@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { StepFactory } from "./step.factory.js";
+import { describe, expect, it } from "vitest";
 import { FileReadStep } from "./file-read.step.js";
 import { HttpStep } from "./http.step.js";
 import { ShellStep } from "./shell.step.js";
+import { StepFactory } from "./step.factory.js";
 
 describe("StepFactory", () => {
   it("should create file-read step", () => {

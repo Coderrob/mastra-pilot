@@ -42,38 +42,65 @@ export class Workflow {
     const startTime = Date.now();
     this.logger.info({ workflow: this.name }, 'Workflow execution started');
 
-    const results: StepResult<unknown>[] = [];
-    let currentInput = initialInput;
-
     const context: IStepContext = {
       logger: this.logger.child({ workflow: this.name }),
       metadata,
     };
 
+    const results = await this.executeSteps(initialInput, context, startTime);
+    return this.createResult(results, startTime);
+  }
+
+  private async executeSteps(
+    initialInput: unknown,
+    context: IStepContext,
+    startTime: number
+  ): Promise<StepResult<unknown>[]> {
+    const results: StepResult<unknown>[] = [];
+    let currentInput = initialInput;
+
     for (const stepDef of this.steps) {
-      const result = await stepDef.step.execute(currentInput, context);
+      const result = await this.executeStep(stepDef, currentInput, context);
       results.push(result);
 
-      if (!result.success && !this.continueOnError) {
-        const duration = Date.now() - startTime;
-        this.logger.error(
-          { workflow: this.name, duration, failedStep: stepDef.name },
-          'Workflow execution failed'
-        );
-
-        return {
-          success: false,
-          results,
-          error: result.error,
-          duration,
-        };
+      if (this.shouldStopExecution(result)) {
+        this.logFailure(startTime, stepDef.name);
+        return results;
       }
 
       currentInput = result.data;
     }
 
+    return results;
+  }
+
+  private async executeStep(
+    stepDef: StepDefinition,
+    input: unknown,
+    context: IStepContext
+  ): Promise<StepResult<unknown>> {
+    return stepDef.step.execute(input, context);
+  }
+
+  private shouldStopExecution(result: StepResult<unknown>): boolean {
+    return !result.success && !this.continueOnError;
+  }
+
+  private logFailure(startTime: number, stepName: string): void {
+    const duration = Date.now() - startTime;
+    this.logger.error(
+      { workflow: this.name, duration, failedStep: stepName },
+      'Workflow execution failed'
+    );
+  }
+
+  private createResult(
+    results: StepResult<unknown>[],
+    startTime: number
+  ): WorkflowResult {
     const duration = Date.now() - startTime;
     const success = results.every((r) => r.success);
+    const error = results.find((r) => !r.success)?.error;
 
     this.logger.info(
       { workflow: this.name, duration, success },
@@ -83,6 +110,7 @@ export class Workflow {
     return {
       success,
       results,
+      error,
       duration,
     };
   }

@@ -1,6 +1,6 @@
-import { Workflow, WorkflowOptions } from '@repo/core';
-import { ShellStep, GitStep } from '@repo/steps';
 import pino from 'pino';
+import { Workflow, WorkflowOptions } from '@repo/core';
+import { GitStep, ShellStep } from '@repo/steps';
 
 /**
  * DevAuto workflow: dependencies → test → commit → push
@@ -47,28 +47,39 @@ export function createDevAutoWorkflow(options?: Partial<WorkflowOptions>): Workf
   return workflow;
 }
 
+type PackageManager = 'pnpm' | 'npm' | 'yarn';
+
+interface DevAutoConfig {
+  repoPath: string;
+  commitMessage: string;
+  packageManager: PackageManager;
+}
+
+const DEFAULT_CONFIG: DevAutoConfig = {
+  repoPath: process.cwd(),
+  commitMessage: 'Automated commit',
+  packageManager: 'pnpm',
+};
+
 /**
  * Execute the DevAuto workflow with default configuration
  */
 export async function executeDevAuto(
-  repoPath: string = process.cwd(),
-  commitMessage: string = 'Automated commit',
-  packageManager: 'pnpm' | 'npm' | 'yarn' = 'pnpm'
+  repoPath?: string,
+  commitMessage?: string,
+  packageManager?: PackageManager
 ) {
+  const config = mergeWithDefaults({ repoPath, commitMessage, packageManager });
+  return await executeWithConfig(config);
+}
+
+function mergeWithDefaults(partial: Partial<DevAutoConfig>): DevAutoConfig {
+  return { ...DEFAULT_CONFIG, ...partial };
+}
+
+async function executeWithConfig(config: DevAutoConfig) {
   const workflow = createDevAutoWorkflow();
-
-  const input = {
-    // Step 1: Install dependencies
-    command: packageManager,
-    args: ['install'],
-    cwd: repoPath,
-  };
-
-  const result = await workflow.execute(input, {
-    repoPath,
-    commitMessage,
-    packageManager,
-  });
-
-  return result;
+  const input = { command: config.packageManager, args: ['install'], cwd: config.repoPath };
+  const context = { ...config } as Record<string, unknown>;
+  return await workflow.execute(input, context);
 }

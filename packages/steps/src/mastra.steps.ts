@@ -2,8 +2,8 @@
  * Mastra-native step implementations
  * These use the WorkflowFacade and adapter pattern
  */
-import { createStepWithLogger } from '@repo/core';
 import { z } from 'zod';
+import { createStepWithLogger } from '@repo/core';
 import { FileUtils } from '@repo/utils';
 
 /**
@@ -25,23 +25,8 @@ export const fileReadStepConfig = createStepWithLogger({
   }),
   execute: async (input, context) => {
     const { logger } = context;
-    const { path, from = 1, to = -1, baseDir = process.cwd() } = input;
-
-    logger.info({ path, from, to }, 'Reading file');
-
-    const exists = await FileUtils.existsSafe(path, baseDir);
-    if (!exists) {
-      throw new Error(`File not found: ${path}`);
-    }
-
-    if (from !== 1 || to !== -1) {
-      const lines = await FileUtils.readFileLines(path, from, to, baseDir);
-      const content = lines.join('\n');
-      return { content, lines, path };
-    }
-
-    const content = await FileUtils.readFileSafe(path, baseDir);
-    return { content, path };
+    logger.info({ path: input.path, from: input.from, to: input.to }, 'Reading file');
+    return await executeFileRead(input);
   },
 });
 
@@ -125,3 +110,59 @@ export const shellStepConfig = (allowedCommands: string[] = ['ls', 'cat', 'echo'
       };
     },
   });
+
+/**
+ * Execute file read with validation and defaults
+ */
+async function executeFileRead(input: { path: string; from?: number; to?: number; baseDir?: string }) {
+  const baseDir = getBaseDir(input.baseDir);
+  const from = getFrom(input.from);
+  const to = getTo(input.to);
+  
+  await validateFileExists(input.path, baseDir);
+  return await readFileWithRange(input.path, from, to, baseDir);
+}
+
+function getBaseDir(baseDir: string | undefined): string {
+  if (baseDir) return baseDir;
+  return process.cwd();
+}
+
+function getFrom(from: number | undefined): number {
+  if (from) return from;
+  return 1;
+}
+
+function getTo(to: number | undefined): number {
+  if (to) return to;
+  return -1;
+}
+
+/**
+ * Validate that file exists or throw error
+ */
+async function validateFileExists(path: string, baseDir: string): Promise<void> {
+  const exists = await FileUtils.existsSafe(path, baseDir);
+  if (!exists) {
+    throw new Error(`File not found: ${path}`);
+  }
+}
+
+/**
+ * Helper function to read file content with optional line range
+ */
+async function readFileWithRange(
+  path: string,
+  from: number,
+  to: number,
+  baseDir: string
+): Promise<{ content: string; lines?: string[]; path: string }> {
+  if (from !== 1 || to !== -1) {
+    const lines = await FileUtils.readFileLines(path, from, to, baseDir);
+    const content = lines.join('\n');
+    return { content, lines, path };
+  }
+
+  const content = await FileUtils.readFileSafe(path, baseDir);
+  return { content, path };
+}

@@ -1,4 +1,8 @@
 {
+  "author": {
+    "name": "Robert Lindley",
+    "url": "https://coderrob.com"
+  },
   "dependencies": {
     "@repo/core": "workspace:*",
     "@repo/steps": "workspace:*",

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { BaseStep, StepContext, StepResult } from './base-step.js';
-import { z } from 'zod';
 import pino from 'pino';
+import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { BaseStep, StepContext, StepResult } from './base-step.js';
 
 // Test implementation of BaseStep
 class TestStep extends BaseStep<{ value: number }, { doubled: number }> {

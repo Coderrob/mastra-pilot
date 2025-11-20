@@ -1,6 +1,6 @@
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git';
 import { z } from 'zod';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 
 export const GitInputSchema = z.object({
   action: z.enum(['clone', 'pull', 'commit', 'push', 'status', 'add', 'init']),
@@ -34,72 +34,17 @@ export class GitStep extends BaseStep<GitInput, GitOutput> {
     _context: IStepContext
   ): Promise<StepResult<GitOutput>> {
     try {
-      const { action, repoPath, message, files, remote, branch, url } = input;
-
-      const options: Partial<SimpleGitOptions> = {
-        baseDir: repoPath || process.cwd(),
-        binary: 'git',
-        maxConcurrentProcesses: 6,
-      };
-
-      const git: SimpleGit = simpleGit(options);
-
-      _context.logger.debug({ action, repoPath }, 'Executing git operation');
-
-      let result: any;
-
-      switch (action) {
-        case 'init':
-          result = await git.init();
-          break;
-
-        case 'clone':
-          if (!url) {
-            throw new Error('URL is required for clone action');
-          }
-          if (repoPath) {
-            result = await git.clone(url, repoPath);
-          } else {
-            result = await git.clone(url);
-          }
-          break;
-
-        case 'pull':
-          result = await git.pull(remote, branch);
-          break;
-
-        case 'add':
-          if (!files || files.length === 0) {
-            throw new Error('Files are required for add action');
-          }
-          result = await git.add(files);
-          break;
-
-        case 'commit':
-          if (!message) {
-            throw new Error('Message is required for commit action');
-          }
-          result = await git.commit(message);
-          break;
-
-        case 'push':
-          result = await git.push(remote, branch);
-          break;
-
-        case 'status':
-          result = await git.status();
-          break;
-
-        default:
-          throw new Error(`Unknown git action: ${action}`);
-      }
-
+      const git = this.createGitInstance(input.repoPath);
+      _context.logger.debug({ action: input.action, repoPath: input.repoPath }, 'Executing git operation');
+      
+      const result = await this.executeGitAction(git, input);
+      
       return {
         success: true,
         data: {
-          action,
+          action: input.action,
           result,
-          message: `Git ${action} completed successfully`,
+          message: `Git ${input.action} completed successfully`,
         },
       };
     } catch (error) {
@@ -108,5 +53,59 @@ export class GitStep extends BaseStep<GitInput, GitOutput> {
         error: error instanceof Error ? error : new Error(String(error)),
       };
     }
+  }
+
+  private createGitInstance(repoPath?: string): SimpleGit {
+    const options: Partial<SimpleGitOptions> = {
+      baseDir: repoPath || process.cwd(),
+      binary: 'git',
+      maxConcurrentProcesses: 6,
+    };
+    return simpleGit(options);
+  }
+
+  private async executeGitAction(git: SimpleGit, input: GitInput): Promise<any> {
+    const actionHandlers = this.getActionHandlers(git, input);
+    const handler = actionHandlers[input.action];
+    
+    if (!handler) {
+      throw new Error(`Unknown git action: ${input.action}`);
+    }
+    
+    return handler();
+  }
+
+  private getActionHandlers(git: SimpleGit, input: GitInput): Record<string, () => Promise<any>> {
+    const { message, files, remote, branch, url, repoPath } = input;
+    return {
+      'init': () => git.init(),
+      'clone': () => this.executeClone(git, url, repoPath),
+      'pull': () => git.pull(remote, branch),
+      'add': () => this.executeAdd(git, files),
+      'commit': () => this.executeCommit(git, message),
+      'push': () => git.push(remote, branch),
+      'status': () => git.status(),
+    };
+  }
+
+  private async executeClone(git: SimpleGit, url?: string, repoPath?: string): Promise<any> {
+    if (!url) {
+      throw new Error('URL is required for clone action');
+    }
+    return repoPath ? git.clone(url, repoPath) : git.clone(url);
+  }
+
+  private async executeAdd(git: SimpleGit, files?: string[]): Promise<any> {
+    if (!files || files.length === 0) {
+      throw new Error('Files are required for add action');
+    }
+    return git.add(files);
+  }
+
+  private async executeCommit(git: SimpleGit, message?: string): Promise<any> {
+    if (!message) {
+      throw new Error('Message is required for commit action');
+    }
+    return git.commit(message);
   }
 }

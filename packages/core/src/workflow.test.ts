@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { Workflow } from './workflow.js';
-import { BaseStep, StepContext, StepResult } from './base-step.js';
 import pino from 'pino';
+import { describe, expect, it } from 'vitest';
+import { BaseStep, StepContext, StepResult } from './base-step.js';
+import { Workflow } from './workflow.js';
 
 class AddStep extends BaseStep<{ value: number }, { value: number }> {
   constructor(private amount: number) {

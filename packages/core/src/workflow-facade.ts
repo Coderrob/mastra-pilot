@@ -1,15 +1,15 @@
+import { isString } from '@repo/utils';
+import { MastraAdapter } from './adapters/mastra-adapter.js';
+import { WorkflowExecutionError } from './errors.js';
+import { ILogger } from './logger.js';
 import type { 
-  IWorkflowProvider, 
   IStepConfig, 
+  IStepExecutionContext, 
   IWorkflowConfig, 
   IWorkflowExecutionContext,
   IWorkflowInstance,
-  IStepExecutionContext
+  IWorkflowProvider
 } from './workflow-provider.js';
-import { MastraAdapter } from './adapters/mastra-adapter.js';
-import { ILogger } from './logger.js';
-import { WorkflowExecutionError } from './errors.js';
-import { isString } from '@repo/utils';
 
 /**
  * Workflow Facade - Provider-agnostic workflow orchestration
@@ -22,7 +22,7 @@ export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvi
   constructor(provider?: TProvider) {
     // Default to MastraAdapter if no provider specified
     // This is safe because MastraAdapter implements IWorkflowProvider
-    this.provider = provider ?? (new MastraAdapter() as TProvider);
+    this.provider = provider ?? (new MastraAdapter() as unknown as TProvider);
   }
 
   /**
@@ -51,21 +51,30 @@ export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvi
     input: TIn,
     context?: IWorkflowExecutionContext
   ): Promise<IWorkflowExecutionResult<TOut>> {
-    let workflow: Readonly<IWorkflowInstance<TIn, TOut>> | undefined;
+    const workflow = this.resolveWorkflow(workflowIdOrInstance);
     
-    if (isString(workflowIdOrInstance)) {
-      workflow = this.workflows.get(workflowIdOrInstance) as Readonly<IWorkflowInstance<TIn, TOut>> | undefined;
-    } else {
-      workflow = workflowIdOrInstance;
-    }
-
     if (!workflow) {
-      const errorId = isString(workflowIdOrInstance) ? workflowIdOrInstance : 'unknown';
+      const errorId = this.getWorkflowErrorId(workflowIdOrInstance);
       throw new WorkflowExecutionError(`Workflow not found: ${errorId}`, errorId);
     }
 
     // Remove readonly for execution - structurally compatible
     return this.provider.execute(workflow as IWorkflowInstance<TIn, TOut>, input, context);
+  }
+
+  private resolveWorkflow<TIn, TOut>(
+    workflowIdOrInstance: string | Readonly<IWorkflowInstance<TIn, TOut>>
+  ): Readonly<IWorkflowInstance<TIn, TOut>> | undefined {
+    if (isString(workflowIdOrInstance)) {
+      return this.workflows.get(workflowIdOrInstance) as Readonly<IWorkflowInstance<TIn, TOut>> | undefined;
+    }
+    return workflowIdOrInstance;
+  }
+
+  private getWorkflowErrorId<TIn, TOut>(
+    workflowIdOrInstance: string | Readonly<IWorkflowInstance<TIn, TOut>>
+  ): string {
+    return isString(workflowIdOrInstance) ? workflowIdOrInstance : 'unknown';
   }
 
   /**

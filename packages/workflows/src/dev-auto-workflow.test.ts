@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { createDevAutoWorkflow } from './dev-auto-workflow.js';
 import pino from 'pino';
+import { describe, expect, it } from 'vitest';
+import { createDevAutoWorkflow } from './dev-auto-workflow.js';
 
 describe('DevAutoWorkflow', () => {
   const logger = pino({ level: 'silent' });

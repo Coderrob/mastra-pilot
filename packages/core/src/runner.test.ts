@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import pino from 'pino';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { BaseStep, StepContext, StepResult } from './base-step.js';
 import { Runner } from './runner.js';
 import { Workflow } from './workflow.js';
-import { BaseStep, StepContext, StepResult } from './base-step.js';
-import pino from 'pino';
 
 class SimpleStep extends BaseStep<{ value: number }, { value: number }> {
   constructor() {

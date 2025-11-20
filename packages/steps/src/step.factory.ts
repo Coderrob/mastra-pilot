@@ -1,9 +1,9 @@
 import { BaseStep } from "@repo/core";
-import { FileReadStep } from "./file-read.step.js";
 import { CsvWriteStep } from "./csv-write.step.js";
+import { FileReadStep } from "./file-read.step.js";
+import { GitStep } from "./git.step.js";
 import { HttpStep } from "./http.step.js";
 import { ShellStep } from "./shell.step.js";
-import { GitStep } from "./git.step.js";
 
 /**
  * StepFactory implements the Factory pattern for creating step instances
@@ -11,7 +11,7 @@ import { GitStep } from "./git.step.js";
 export class StepFactory {
   private static readonly stepRegistry = new Map<
     string,
-    () => BaseStep<any, any>
+    () => BaseStep<unknown, unknown>
   >([
     ["file-read", () => new FileReadStep()],
     ["csv-write", () => new CsvWriteStep()],
@@ -23,7 +23,7 @@ export class StepFactory {
   /**
    * Create a step by type name
    */
-  static createStep(type: string): BaseStep<any, any> {
+  static createStep(type: string): BaseStep<unknown, unknown> {
     const factory = this.stepRegistry.get(type);
     if (!factory) {
       throw new Error(`Unknown step type: ${type}`);
@@ -34,7 +34,7 @@ export class StepFactory {
   /**
    * Register a custom step type
    */
-  static registerStep(type: string, factory: () => BaseStep<any, any>): void {
+  static registerStep(type: string, factory: () => BaseStep<unknown, unknown>): void {
     this.stepRegistry.set(type, factory);
   }
 

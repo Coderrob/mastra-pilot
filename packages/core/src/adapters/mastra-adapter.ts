@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import type { 
-  IWorkflowProvider, 
   IStepConfig, 
-  IWorkflowConfig as ProviderWorkflowConfig, 
+  IStepExecutionContext, 
+  IStepInstance, 
+  IWorkflowConfig,
   IWorkflowExecutionContext,
-  IWorkflowInstance,
-  IStepInstance,
   IWorkflowExecutionResult,
-  IStepExecutionContext
+  IWorkflowInstance,
+  IWorkflowProvider 
 } from '../workflow-provider.js';
 
 /**
@@ -32,31 +32,15 @@ export class MastraAdapter implements IWorkflowProvider {
       inputSchema: effectiveInputSchema,
       outputSchema: effectiveOutputSchema,
       execute: async (input: TIn, context: IStepExecutionContext) => {
-        // Validate input using Zod schema if provided
-        if (inputSchema) {
-          const parseResult = effectiveInputSchema.safeParse(input);
-          if (!parseResult.success) {
-            throw new Error(`Input validation failed: ${parseResult.error.message}`);
-          }
-        }
-
-        // Execute the user's function with validated input and context
+        this.validateInput(inputSchema, effectiveInputSchema, input);
         const result = await execute(input, context);
-
-        // Validate output using Zod schema if provided
-        if (outputSchema) {
-          const parseResult = effectiveOutputSchema.safeParse(result);
-          if (!parseResult.success) {
-            throw new Error(`Output validation failed: ${parseResult.error.message}`);
-          }
-        }
-
+        this.validateOutput(outputSchema, effectiveOutputSchema, result);
         return result;
       },
     };
   }
 
-  createWorkflow<TIn = unknown, TOut = unknown>(config: ProviderWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut> {
+  createWorkflow<TIn = unknown, TOut = unknown>(config: IWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut> {
     const { id, name, description, inputSchema, outputSchema, steps } = config;
 
     // Use provided schemas or create default ones if not specified
@@ -73,29 +57,9 @@ export class MastraAdapter implements IWorkflowProvider {
       outputSchema: effectiveOutputSchema,
       steps: Object.freeze([...steps]),
       execute: async (input: TIn, context?: IWorkflowExecutionContext) => {
-        // Validate workflow input
-        if (inputSchema) {
-          const parseResult = effectiveInputSchema.safeParse(input);
-          if (!parseResult.success) {
-            throw new Error(`Workflow input validation failed: ${parseResult.error.message}`);
-          }
-        }
-
-        // Execute steps sequentially, passing output to next step
-        let currentInput: unknown = input;
-        for (const step of steps) {
-          currentInput = await step.execute(currentInput, context || {});
-        }
-
-        // Validate workflow output
-        const output = currentInput as TOut;
-        if (outputSchema) {
-          const parseResult = effectiveOutputSchema.safeParse(output);
-          if (!parseResult.success) {
-            throw new Error(`Workflow output validation failed: ${parseResult.error.message}`);
-          }
-        }
-
+        this.validateInput(inputSchema, effectiveInputSchema, input, 'Workflow input');
+        const output = await this.executeStepsSequentially<TIn, TOut>(steps, input, context);
+        this.validateOutput(outputSchema, effectiveOutputSchema, output, 'Workflow output');
         return output;
       },
     };
@@ -109,34 +73,84 @@ export class MastraAdapter implements IWorkflowProvider {
     const startTime = Date.now();
     
     try {
-      // Execute workflow using its execute function if available
-      let data: TOut;
-      if (workflow.execute) {
-        data = await workflow.execute(input, context);
-      } else {
-        // Fallback: execute steps sequentially
-        let currentInput: unknown = input;
-        for (const step of workflow.steps) {
-          currentInput = await step.execute(currentInput, context || {});
-        }
-        data = currentInput as TOut;
-      }
-
-      return {
-        success: true,
-        data,
-        error: undefined,
-        results: Object.freeze([]),
-        duration: Date.now() - startTime,
-      };
+      const data = await this.executeWorkflow(workflow, input, context);
+      return this.createSuccessResult(data, startTime);
     } catch (error) {
-      return {
-        success: false,
-        data: undefined,
-        error: error instanceof Error ? error : new Error(String(error)),
-        results: Object.freeze([]),
-        duration: Date.now() - startTime,
-      };
+      return this.createErrorResult(error, startTime);
     }
+  }
+
+  private validateInput<T>(
+    schema: z.ZodType<T> | undefined,
+    effectiveSchema: z.ZodType<T>,
+    input: T,
+    prefix: string = 'Input'
+  ): void {
+    if (!schema) return;
+    this.validateWithSchema(effectiveSchema, input, prefix);
+  }
+
+  private validateOutput<T>(
+    schema: z.ZodType<T> | undefined,
+    effectiveSchema: z.ZodType<T>,
+    output: T,
+    prefix: string = 'Output'
+  ): void {
+    if (!schema) return;
+    this.validateWithSchema(effectiveSchema, output, prefix);
+  }
+
+  private validateWithSchema<T>(
+    schema: z.ZodType<T>,
+    data: T,
+    prefix: string
+  ): void {
+    const parseResult = schema.safeParse(data);
+    if (!parseResult.success) {
+      throw new Error(`${prefix} validation failed: ${parseResult.error.message}`);
+    }
+  }
+
+  private async executeStepsSequentially<TIn, TOut>(
+    steps: readonly IStepInstance[],
+    input: TIn,
+    context?: IWorkflowExecutionContext
+  ): Promise<TOut> {
+    let currentInput: unknown = input;
+    for (const step of steps) {
+      currentInput = await step.execute(currentInput, context || {});
+    }
+    return currentInput as TOut;
+  }
+
+  private async executeWorkflow<TIn, TOut>(
+    workflow: IWorkflowInstance<TIn, TOut>,
+    input: TIn,
+    context?: IWorkflowExecutionContext
+  ): Promise<TOut> {
+    if (workflow.execute) {
+      return await workflow.execute(input, context);
+    }
+    return await this.executeStepsSequentially(workflow.steps, input, context);
+  }
+
+  private createSuccessResult<TOut>(data: TOut, startTime: number): IWorkflowExecutionResult<TOut> {
+    return {
+      success: true,
+      data,
+      error: undefined,
+      results: Object.freeze([]),
+      duration: Date.now() - startTime,
+    };
+  }
+
+  private createErrorResult<TOut>(error: unknown, startTime: number): IWorkflowExecutionResult<TOut> {
+    return {
+      success: false,
+      data: undefined,
+      error: error instanceof Error ? error : new Error(String(error)),
+      results: Object.freeze([]),
+      duration: Date.now() - startTime,
+    };
   }
 }

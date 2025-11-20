@@ -1,4 +1,4 @@
-import { isObject, isFunction } from '@repo/utils';
+import { isFunction, isObject } from '@repo/utils';
 
 /**
  * Logger interface for dependency injection
@@ -30,19 +30,23 @@ export interface ILogger {
  * Type guard to check if an object is a valid ILogger
  */
 export function isLogger(obj: unknown): obj is ILogger {
-  if (!isObject(obj)) {
-    return false;
-  }
-  
-  // Type-safe checking without casting
+  return isObject(obj) && hasLoggerMethods(obj);
+}
+
+function hasLoggerMethods(obj: unknown): boolean {
   const maybeLogger = obj as Record<string, unknown>;
+  return hasBasicLogMethods(maybeLogger) && hasAdvancedLogMethods(maybeLogger);
+}
+
+function hasBasicLogMethods(logger: Record<string, unknown>): boolean {
+  const methods = [logger.trace, logger.debug, logger.info, logger.warn];
+  return methods.every(isFunction);
+}
+
+function hasAdvancedLogMethods(logger: Record<string, unknown>): boolean {
   return (
-    isFunction(maybeLogger.trace) &&
-    isFunction(maybeLogger.debug) &&
-    isFunction(maybeLogger.info) &&
-    isFunction(maybeLogger.warn) &&
-    isFunction(maybeLogger.error) &&
-    isFunction(maybeLogger.fatal) &&
-    isFunction(maybeLogger.child)
+    isFunction(logger.error) &&
+    isFunction(logger.fatal) &&
+    isFunction(logger.child)
   );
 }

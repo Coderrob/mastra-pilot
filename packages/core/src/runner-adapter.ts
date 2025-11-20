@@ -1,12 +1,12 @@
 import pino from 'pino';
-import { LogLevel } from './enums.js';
-import { ILogger } from './logger.js';
-import { WorkflowFacade, IWorkflowExecutionResult } from './workflow-facade.js';
-import { IWorkflowProvider, IWorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
+import { hasGetName, hasId } from '@repo/utils';
 import { MastraAdapter } from './adapters/mastra-adapter.js';
-import { Workflow } from './workflow.js';
+import { LogLevel } from './enums.js';
 import { WorkflowExecutionError } from './errors.js';
-import { hasId, hasGetName } from '@repo/utils';
+import { ILogger } from './logger.js';
+import { IWorkflowExecutionResult, WorkflowFacade } from './workflow-facade.js';
+import { IWorkflowProvider, IWorkflowInstance as ProviderWorkflowInstance } from './workflow-provider.js';
+import { Workflow } from './workflow.js';
 
 /**
  * Workflow instance - can be legacy Workflow, Mastra workflow, or Mastra step
@@ -34,7 +34,12 @@ export class RunnerAdapter {
   private readonly workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
   constructor(options: IRunnerAdapterOptions = {}) {
-    this.logger = options.logger ?? (pino({
+    this.logger = this.createLogger(options);
+    this.facade = this.createFacade(options);
+  }
+
+  private createLogger(options: IRunnerAdapterOptions): ILogger {
+    return options.logger ?? (pino({
       level: options.logLevel ?? LogLevel.INFO,
       transport: {
         target: 'pino-pretty',
@@ -43,35 +48,35 @@ export class RunnerAdapter {
         },
       },
     }) as ILogger);
+  }
 
-    // Use provided adapter or default to Mastra
+  private createFacade(options: IRunnerAdapterOptions): WorkflowFacade {
     const provider = options.provider || new MastraAdapter();
-    this.facade = new WorkflowFacade(provider);
+    return new WorkflowFacade(provider);
   }
 
   /**
    * Register a workflow (can be legacy or provider-based)
    */
   registerWorkflow(workflow: WorkflowInstance, id?: string): this {
-    // Determine workflow ID using type guards
-    let workflowId = id;
-    
-    if (!workflowId && hasId(workflow)) {
-      workflowId = workflow.id;
-    }
-    
-    if (!workflowId && hasGetName(workflow)) {
-      workflowId = workflow.getName();
-    }
-    
-    if (!workflowId) {
-      workflowId = 'unnamed-workflow';
-    }
-    
-    // Store as readonly to prevent mutations
+    const workflowId = this.getWorkflowId(workflow, id);
     this.workflows.set(workflowId, Object.freeze(workflow));
     this.logger.info({ workflow: workflowId }, 'Workflow registered');
     return this;
+  }
+
+  private getWorkflowId(workflow: WorkflowInstance, id?: string): string {
+    return id || this.extractWorkflowId(workflow);
+  }
+
+  private extractWorkflowId(workflow: WorkflowInstance): string {
+    if (this.hasWorkflowId(workflow)) return workflow.id;
+    if (hasGetName(workflow)) return workflow.getName();
+    return 'unnamed-workflow';
+  }
+
+  private hasWorkflowId(workflow: WorkflowInstance): workflow is WorkflowInstance & { id: string } {
+    return hasId(workflow) && workflow.id !== undefined && workflow.id !== '';
   }
 
   /**
@@ -130,17 +135,27 @@ export class RunnerAdapter {
     const results: IWorkflowExecutionResult[] = [];
     let currentInput: unknown;
 
-    for (const { id, input, context } of workflows) {
-      const result = await this.runWorkflow(id, input ?? currentInput, context);
+    for (const config of workflows) {
+      const result = await this.executeWorkflowInSequence(config, currentInput);
       results.push(result);
-      
-      // Use last successful result as input for next workflow
-      if (result.success && result.data) {
-        currentInput = result.data;
-      }
+      currentInput = this.updateInputFromResult(result, currentInput);
     }
 
     return results;
+  }
+
+  private async executeWorkflowInSequence(
+    config: { id: string; input?: unknown; context?: Record<string, unknown> },
+    currentInput: unknown
+  ): Promise<IWorkflowExecutionResult> {
+    return this.runWorkflow(config.id, config.input ?? currentInput, config.context);
+  }
+
+  private updateInputFromResult(
+    result: IWorkflowExecutionResult,
+    currentInput: unknown
+  ): unknown {
+    return result.success && result.data ? result.data : currentInput;
   }
 
   /**

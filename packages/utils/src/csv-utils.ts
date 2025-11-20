@@ -18,14 +18,8 @@ export class CsvUtils {
     data: Record<string, unknown>[],
     options: CsvOptions = {}
   ): string {
-    const { header = true, delimiter = ",", quote = '"', columns } = options;
-
-    return stringify(data, {
-      header,
-      delimiter,
-      quote,
-      columns,
-    });
+    const defaults = { header: true, delimiter: ",", quote: '"' };
+    return stringify(data, { ...defaults, ...options });
   }
 
   /**
@@ -39,21 +33,34 @@ export class CsvUtils {
     if (lines.length === 0) return [];
 
     const headers = lines[0].split(delimiter).map((h) => h.trim());
+    return this.parseDataRows(lines, headers, delimiter);
+  }
+
+  private static parseDataRows(
+    lines: string[],
+    headers: string[],
+    delimiter: string
+  ): Record<string, string>[] {
     const result: Record<string, string>[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(delimiter);
-      const obj: Record<string, string> = {};
-
-      for (let index = 0; index < headers.length; index++) {
-        const header = headers[index];
-        obj[header] = values[index]?.trim() || "";
-      }
-
-      result.push(obj);
+      const row = this.parseRow(lines[i], headers, delimiter);
+      result.push(row);
     }
 
     return result;
+  }
+
+  private static parseRow(
+    line: string,
+    headers: string[],
+    delimiter: string
+  ): Record<string, string> {
+    const values = line.split(delimiter);
+    return headers.reduce((obj, header, index) => {
+      obj[header] = values[index]?.trim() || "";
+      return obj;
+    }, {} as Record<string, string>);
   }
 
   /**

@@ -1,6 +1,6 @@
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { z } from 'zod';
+import { BaseStep, IStepContext, StepResult } from '@repo/core';
 
 export const HttpInputSchema = z.object({
   url: z.string().url('Valid URL is required'),
@@ -34,30 +34,14 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
     _context: IStepContext
   ): Promise<StepResult<HttpOutput>> {
     try {
-      const { url, method, headers, data, params, timeout } = input;
-
-      const config: AxiosRequestConfig = {
-        url,
-        method,
-        headers,
-        data,
-        params,
-        timeout,
-        validateStatus: () => true, // Don't throw on any status
-      };
-
+      const config = this.createRequestConfig(input);
       _context.logger.debug({ config }, 'Making HTTP request');
-
+      
       const response: AxiosResponse = await axios(config);
-
+      
       return {
-        success: response.status >= 200 && response.status < 300,
-        data: {
-          status: response.status,
-          statusText: response.statusText,
-          data: response.data,
-          headers: response.headers as Record<string, string>,
-        },
+        success: this.isSuccessStatus(response.status),
+        data: this.createHttpOutput(response),
       };
     } catch (error) {
       return {
@@ -65,5 +49,31 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
         error: error instanceof Error ? error : new Error(String(error)),
       };
     }
+  }
+
+  private createRequestConfig(input: HttpInput): AxiosRequestConfig {
+    const { url, method, headers, data, params, timeout } = input;
+    return {
+      url,
+      method,
+      headers,
+      data,
+      params,
+      timeout,
+      validateStatus: () => true, // Don't throw on any status
+    };
+  }
+
+  private isSuccessStatus(status: number): boolean {
+    return status >= 200 && status < 300;
+  }
+
+  private createHttpOutput(response: AxiosResponse): HttpOutput {
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      headers: response.headers as Record<string, string>,
+    };
   }
 }

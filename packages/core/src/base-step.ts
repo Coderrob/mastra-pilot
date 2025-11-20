@@ -14,77 +14,65 @@ export interface StepResult<TOut> {
 }
 
 /**
- * BaseStep implements the Command pattern for workflow steps
- * Generic type parameters TIn and TOut define input and output types
+ * BaseStep: Command pattern for workflow steps
  */
 export abstract class BaseStep<TIn = unknown, TOut = unknown> {
-  protected readonly name: string;
-  protected readonly inputSchema?: z.ZodSchema<TIn>;
-  protected readonly outputSchema?: z.ZodSchema<TOut>;
-
   constructor(
-    name: string,
-    inputSchema?: z.ZodSchema<TIn>,
-    outputSchema?: z.ZodSchema<TOut>
-  ) {
-    this.name = name;
-    this.inputSchema = inputSchema;
-    this.outputSchema = outputSchema;
-  }
+    protected readonly name: string,
+    protected readonly inputSchema?: z.ZodSchema<TIn>,
+    protected readonly outputSchema?: z.ZodSchema<TOut>
+  ) {}
 
-  /**
-   * Execute the step with input validation
-   */
   async execute(input: TIn, context: IStepContext): Promise<StepResult<TOut>> {
     const startTime = Date.now();
-    context.logger.info({ step: this.name, input }, 'Step execution started');
+    this.logStart(context, input);
 
     try {
-      // Validate input if schema is provided
-      if (this.inputSchema) {
-        this.inputSchema.parse(input);
-      }
-
-      // Execute the step implementation
+      this.validateInput(input);
       const result = await this.run(input, context);
-
-      // Validate output if schema is provided
-      if (this.outputSchema && result.data) {
-        this.outputSchema.parse(result.data);
-      }
-
-      const duration = Date.now() - startTime;
-      context.logger.info(
-        { step: this.name, duration, success: result.success },
-        'Step execution completed'
-      );
-
+      this.validateOutput(result.data);
+      this.logSuccess(context, startTime, result.success);
       return result;
     } catch (error) {
-      const duration = Date.now() - startTime;
-      const stepError = error instanceof Error ? error : new Error(String(error));
-      
-      context.logger.error(
-        { step: this.name, duration, error: stepError.message },
-        'Step execution failed'
-      );
-
-      return {
-        success: false,
-        error: stepError,
-      };
+      return this.handleError(context, error, startTime);
     }
   }
 
-  /**
-   * Abstract method to be implemented by concrete steps
-   */
   protected abstract run(input: TIn, context: IStepContext): Promise<StepResult<TOut>>;
 
-  /**
-   * Get step name
-   */
   getName(): string {
     return this.name;
+  }
+
+  private validateInput(input: TIn): void {
+    if (this.inputSchema) {
+      this.inputSchema.parse(input);
+    }
+  }
+
+  private validateOutput(data: TOut | undefined): void {
+    if (this.outputSchema && data) {
+      this.outputSchema.parse(data);
+    }
+  }
+
+  private logStart(context: IStepContext, input: TIn): void {
+    context.logger.info({ step: this.name, input }, 'Step started');
+  }
+
+  private logSuccess(context: IStepContext, startTime: number, success: boolean): void {
+    context.logger.info(
+      { step: this.name, duration: Date.now() - startTime, success },
+      'Step completed'
+    );
+  }
+
+  private handleError(context: IStepContext, error: unknown, startTime: number): StepResult<TOut> {
+    const stepError = error instanceof Error ? error : new Error(String(error));
+    context.logger.error(
+      { step: this.name, duration: Date.now() - startTime, error: stepError.message },
+      'Step failed'
+    );
+    return { success: false, error: stepError };
   }
 }

@@ -1,6 +1,6 @@
+import { z } from 'zod';
 import { BaseStep, IStepContext, StepResult } from '@repo/core';
 import { FileUtils } from '@repo/utils';
-import { z } from 'zod';
 
 export const FileReadInputSchema = z.object({
   path: z.string().min(1, 'Path is required'),
@@ -31,47 +31,79 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
     _context: IStepContext
   ): Promise<StepResult<FileReadOutput>> {
     try {
-      const { path, from, to, baseDir } = input;
-
-      // Check if file exists
-      const exists = await FileUtils.existsSafe(path, baseDir);
-      if (!exists) {
-        return {
-          success: false,
-          error: new Error(`File not found: ${path}`),
-        };
-      }
-
-      // Read file with line range if specified
-      if (from !== 1 || to !== -1) {
-        const lines = await FileUtils.readFileLines(path, from, to, baseDir);
-        const content = lines.join('\n');
-        
-        return {
-          success: true,
-          data: {
-            content,
-            lines,
-            path,
-          },
-        };
-      }
-
-      // Read entire file
-      const content = await FileUtils.readFileSafe(path, baseDir);
-
-      return {
-        success: true,
-        data: {
-          content,
-          path,
-        },
-      };
+      return await this.executeFileRead(input);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error : new Error(String(error)),
-      };
+      return this.createErrorFromException(error);
     }
+  }
+
+  private async executeFileRead(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
+    const { path, baseDir } = input;
+
+    const exists = await FileUtils.existsSafe(path, baseDir);
+    if (!exists) {
+      return this.createErrorResult(`File not found: ${path}`);
+    }
+
+    return this.readFileContent(input);
+  }
+
+  private createErrorFromException(error: unknown): StepResult<FileReadOutput> {
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
+
+  private async readFileContent(
+    input: FileReadInput
+  ): Promise<StepResult<FileReadOutput>> {
+    const { from, to } = input;
+    const hasRange = from !== 1 || to !== -1;
+
+    return hasRange ? this.readFileByRange(input) : this.readFullFile(input);
+  }
+
+  private async readFileByRange(
+    input: FileReadInput
+  ): Promise<StepResult<FileReadOutput>> {
+    const { path, from, to, baseDir } = input;
+    const lines = await FileUtils.readFileLines(path, from, to, baseDir);
+    const content = lines.join('\n');
+
+    return {
+      success: true,
+      data: {
+        content,
+        lines,
+        path,
+      },
+    };
+  }
+
+  private async readFullFile(
+    input: FileReadInput
+  ): Promise<StepResult<FileReadOutput>> {
+    const { path, baseDir } = input;
+    const content = await FileUtils.readFileSafe(path, baseDir);
+
+    return {
+      success: true,
+      data: {
+        content,
+        path,
+      },
+    };
+  }
+
+  private createErrorResult(message: string): StepResult<FileReadOutput> {
+    return {
+      success: false,
+      error: new Error(message),
+    };
+  }
+
+  getInputSchema() {
+    return FileReadInputSchema;
   }
 }

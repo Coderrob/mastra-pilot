@@ -1,4 +1,8 @@
 {
+  "author": {
+    "name": "Robert Lindley",
+    "url": "https://coderrob.com"
+  },
   "dependencies": {
     "csv-stringify": "^6.4.6",
     "fs-extra": "^11.2.0",
