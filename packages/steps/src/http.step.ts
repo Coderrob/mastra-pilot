@@ -1,10 +1,13 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { z } from 'zod';
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { z } from "zod";
+import { BaseStep, IStepContext, StepResult } from "@repo/core";
 
 export const HttpInputSchema = z.object({
-  url: z.string().url('Valid URL is required'),
-  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']).optional().default('GET'),
+  url: z.string().url("Valid URL is required"),
+  method: z
+    .enum(["GET", "POST", "PUT", "DELETE", "PATCH"])
+    .optional()
+    .default("GET"),
   headers: z.record(z.string()).optional(),
   data: z.any().optional(),
   params: z.record(z.string()).optional(),
@@ -26,7 +29,7 @@ export interface HttpOutput {
  */
 export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
   constructor() {
-    super('HttpStep');
+    super("HttpStep");
   }
 
   protected async run(
@@ -35,10 +38,10 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
   ): Promise<StepResult<HttpOutput>> {
     try {
       const config = this.createRequestConfig(input);
-      _context.logger.debug({ config }, 'Making HTTP request');
-      
+      _context.logger.debug({ config }, "Making HTTP request");
+
       const response: AxiosResponse = await axios(config);
-      
+
       return {
         success: this.isSuccessStatus(response.status),
         data: this.createHttpOutput(response),

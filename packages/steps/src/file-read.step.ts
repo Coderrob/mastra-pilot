@@ -1,9 +1,9 @@
-import { z } from 'zod';
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
-import { FileUtils } from '@repo/utils';
+import { z } from "zod";
+import { BaseStep, IStepContext, StepResult } from "@repo/core";
+import { FileUtils } from "@repo/utils";
 
 export const FileReadInputSchema = z.object({
-  path: z.string().min(1, 'Path is required'),
+  path: z.string().min(1, "Path is required"),
   from: z.number().int().min(1).optional().default(1),
   to: z.number().int().optional().default(-1),
   baseDir: z.string().optional().default(process.cwd()),
@@ -23,7 +23,7 @@ export interface FileReadOutput {
  */
 export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
   constructor() {
-    super('FileReadStep');
+    super("FileReadStep");
   }
 
   protected async run(
@@ -37,7 +37,9 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
     }
   }
 
-  private async executeFileRead(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
+  private async executeFileRead(
+    input: FileReadInput
+  ): Promise<StepResult<FileReadOutput>> {
     const { path, baseDir } = input;
 
     const exists = await FileUtils.existsSafe(path, baseDir);
@@ -69,7 +71,7 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
   ): Promise<StepResult<FileReadOutput>> {
     const { path, from, to, baseDir } = input;
     const lines = await FileUtils.readFileLines(path, from, to, baseDir);
-    const content = lines.join('\n');
+    const content = lines.join("\n");
 
     return {
       success: true,

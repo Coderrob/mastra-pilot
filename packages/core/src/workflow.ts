@@ -1,5 +1,5 @@
-import { BaseStep, IStepContext, StepResult } from './base-step.js';
-import { ILogger } from './logger.js';
+import { BaseStep, IStepContext, StepResult } from "./base-step.js";
+import { ILogger } from "./logger.js";
 
 export type StepDefinition = {
   step: BaseStep<unknown, unknown>;
@@ -40,7 +40,7 @@ export class Workflow {
     metadata: Record<string, unknown> = {}
   ): Promise<WorkflowResult> {
     const startTime = Date.now();
-    this.logger.info({ workflow: this.name }, 'Workflow execution started');
+    this.logger.info({ workflow: this.name }, "Workflow execution started");
 
     const context: IStepContext = {
       logger: this.logger.child({ workflow: this.name }),
@@ -90,7 +90,7 @@ export class Workflow {
     const duration = Date.now() - startTime;
     this.logger.error(
       { workflow: this.name, duration, failedStep: stepName },
-      'Workflow execution failed'
+      "Workflow execution failed"
     );
   }
 
@@ -104,7 +104,7 @@ export class Workflow {
 
     this.logger.info(
       { workflow: this.name, duration, success },
-      'Workflow execution completed'
+      "Workflow execution completed"
     );
 
     return {

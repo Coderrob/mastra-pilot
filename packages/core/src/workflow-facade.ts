@@ -1,21 +1,23 @@
-import { isString } from '@repo/utils';
-import { MastraAdapter } from './adapters/mastra-adapter.js';
-import { WorkflowExecutionError } from './errors.js';
-import { ILogger } from './logger.js';
-import type { 
-  IStepConfig, 
-  IStepExecutionContext, 
-  IWorkflowConfig, 
+import { isString } from "@repo/utils";
+import { MastraAdapter } from "./adapters/mastra-adapter.js";
+import { WorkflowExecutionError } from "./errors.js";
+import { ILogger } from "./logger.js";
+import type {
+  IStepConfig,
+  IStepExecutionContext,
+  IWorkflowConfig,
   IWorkflowExecutionContext,
   IWorkflowInstance,
-  IWorkflowProvider
-} from './workflow-provider.js';
+  IWorkflowProvider,
+} from "./workflow-provider.js";
 
 /**
  * Workflow Facade - Provider-agnostic workflow orchestration
  * Uses adapter pattern to support multiple workflow engines (Mastra, LangGraph, etc.)
  */
-export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvider> {
+export class WorkflowFacade<
+  TProvider extends IWorkflowProvider = IWorkflowProvider,
+> {
   private provider: TProvider;
   private workflows: Map<string, Readonly<IWorkflowInstance>> = new Map();
 
@@ -35,10 +37,15 @@ export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvi
   /**
    * Create a workflow from steps
    */
-  createWorkflow<TIn = unknown, TOut = unknown>(config: IWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut> {
+  createWorkflow<TIn = unknown, TOut = unknown>(
+    config: IWorkflowConfig<TIn, TOut>
+  ): IWorkflowInstance<TIn, TOut> {
     const workflow = this.provider.createWorkflow(config);
     // Store as readonly to prevent mutations - cast to unknown for storage
-    this.workflows.set(config.id, Object.freeze(workflow as unknown as IWorkflowInstance));
+    this.workflows.set(
+      config.id,
+      Object.freeze(workflow as unknown as IWorkflowInstance)
+    );
     return workflow;
   }
 
@@ -52,21 +59,30 @@ export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvi
     context?: IWorkflowExecutionContext
   ): Promise<IWorkflowExecutionResult<TOut>> {
     const workflow = this.resolveWorkflow(workflowIdOrInstance);
-    
+
     if (!workflow) {
       const errorId = this.getWorkflowErrorId(workflowIdOrInstance);
-      throw new WorkflowExecutionError(`Workflow not found: ${errorId}`, errorId);
+      throw new WorkflowExecutionError(
+        `Workflow not found: ${errorId}`,
+        errorId
+      );
     }
 
     // Remove readonly for execution - structurally compatible
-    return this.provider.execute(workflow as IWorkflowInstance<TIn, TOut>, input, context);
+    return this.provider.execute(
+      workflow as IWorkflowInstance<TIn, TOut>,
+      input,
+      context
+    );
   }
 
   private resolveWorkflow<TIn, TOut>(
     workflowIdOrInstance: string | Readonly<IWorkflowInstance<TIn, TOut>>
   ): Readonly<IWorkflowInstance<TIn, TOut>> | undefined {
     if (isString(workflowIdOrInstance)) {
-      return this.workflows.get(workflowIdOrInstance) as Readonly<IWorkflowInstance<TIn, TOut>> | undefined;
+      return this.workflows.get(workflowIdOrInstance) as
+        | Readonly<IWorkflowInstance<TIn, TOut>>
+        | undefined;
     }
     return workflowIdOrInstance;
   }
@@ -74,7 +90,7 @@ export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvi
   private getWorkflowErrorId<TIn, TOut>(
     workflowIdOrInstance: string | Readonly<IWorkflowInstance<TIn, TOut>>
   ): string {
-    return isString(workflowIdOrInstance) ? workflowIdOrInstance : 'unknown';
+    return isString(workflowIdOrInstance) ? workflowIdOrInstance : "unknown";
   }
 
   /**
@@ -101,14 +117,18 @@ export interface IWorkflowExecutionResult<TOut = unknown> {
 }
 
 // Alias for backward compatibility
-export type WorkflowExecutionResult<TOut = unknown> = IWorkflowExecutionResult<TOut>;
+export type WorkflowExecutionResult<TOut = unknown> =
+  IWorkflowExecutionResult<TOut>;
 
 /**
  * Helper to create step config with logger injection
  */
 export function createStepWithLogger<TIn, TOut>(
-  config: Omit<IStepConfig<TIn, TOut>, 'execute'> & {
-    execute: (input: TIn, context: IStepExecutionContext & { logger: ILogger }) => Promise<TOut>;
+  config: Omit<IStepConfig<TIn, TOut>, "execute"> & {
+    execute: (
+      input: TIn,
+      context: IStepExecutionContext & { logger: ILogger }
+    ) => Promise<TOut>;
   }
 ): IStepConfig<TIn, TOut> {
   return config as IStepConfig<TIn, TOut>;

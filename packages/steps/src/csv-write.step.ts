@@ -1,13 +1,13 @@
-import { z } from 'zod';
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
-import { CsvUtils, FileUtils } from '@repo/utils';
+import { z } from "zod";
+import { BaseStep, IStepContext, StepResult } from "@repo/core";
+import { CsvUtils, FileUtils } from "@repo/utils";
 
 export const CsvWriteInputSchema = z.object({
-  path: z.string().min(1, 'Path is required'),
+  path: z.string().min(1, "Path is required"),
   data: z.array(z.record(z.any())),
   baseDir: z.string().optional().default(process.cwd()),
   header: z.boolean().optional().default(true),
-  delimiter: z.string().optional().default(','),
+  delimiter: z.string().optional().default(","),
   append: z.boolean().optional().default(false),
 });
 
@@ -24,7 +24,7 @@ export interface CsvWriteOutput {
  */
 export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
   constructor() {
-    super('CsvWriteStep');
+    super("CsvWriteStep");
   }
 
   protected async run(
@@ -38,11 +38,13 @@ export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
     }
   }
 
-  private async executeCsvWrite(input: CsvWriteInput): Promise<StepResult<CsvWriteOutput>> {
+  private async executeCsvWrite(
+    input: CsvWriteInput
+  ): Promise<StepResult<CsvWriteOutput>> {
     const { path, data, baseDir } = input;
 
     if (data.length === 0) {
-      return this.createErrorResult('No data to write');
+      return this.createErrorResult("No data to write");
     }
 
     const finalContent = await this.prepareCsvContent(input);
@@ -87,7 +89,7 @@ export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
     }
 
     const existingContent = await FileUtils.readFileSafe(path, dir);
-    return existingContent + '\n' + csvContent;
+    return existingContent + "\n" + csvContent;
   }
 
   private createErrorResult(message: string): StepResult<CsvWriteOutput> {

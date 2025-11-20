@@ -1,7 +1,7 @@
-import pino from 'pino';
-import { LogLevel } from './enums.js';
-import { ILogger } from './logger.js';
-import { Workflow, WorkflowResult } from './workflow.js';
+import pino from "pino";
+import { LogLevel } from "./enums.js";
+import { ILogger } from "./logger.js";
+import { Workflow, WorkflowResult } from "./workflow.js";
 
 export interface IRunnerOptions {
   logger?: ILogger;
@@ -14,9 +14,25 @@ export interface IRunnerOptions {
  */
 export interface IRunner {
   registerWorkflow(workflow: Workflow): this;
-  runWorkflow(name: string, input?: unknown, metadata?: Record<string, unknown>): Promise<WorkflowResult>;
-  runWorkflowsParallel(workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>): Promise<WorkflowResult[]>;
-  runWorkflowsSequential(workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>): Promise<WorkflowResult[]>;
+  runWorkflow(
+    name: string,
+    input?: unknown,
+    metadata?: Record<string, unknown>
+  ): Promise<WorkflowResult>;
+  runWorkflowsParallel(
+    workflows: Array<{
+      name: string;
+      input?: unknown;
+      metadata?: Record<string, unknown>;
+    }>
+  ): Promise<WorkflowResult[]>;
+  runWorkflowsSequential(
+    workflows: Array<{
+      name: string;
+      input?: unknown;
+      metadata?: Record<string, unknown>;
+    }>
+  ): Promise<WorkflowResult[]>;
   getWorkflows(): string[];
   getLogger(): ILogger;
 }
@@ -37,7 +53,7 @@ export class Runner implements IRunner {
     return pino({
       level: logLevel ?? LogLevel.INFO,
       transport: {
-        target: 'pino-pretty',
+        target: "pino-pretty",
         options: {
           colorize: true,
         },
@@ -47,7 +63,7 @@ export class Runner implements IRunner {
 
   registerWorkflow(workflow: Workflow): this {
     this.workflows.set(workflow.getName(), workflow);
-    this.logger.info({ workflow: workflow.getName() }, 'Workflow registered');
+    this.logger.info({ workflow: workflow.getName() }, "Workflow registered");
     return this;
   }
 
@@ -57,36 +73,56 @@ export class Runner implements IRunner {
     metadata?: Record<string, unknown>
   ): Promise<WorkflowResult> {
     const workflow = this.workflows.get(name);
-    
+
     if (!workflow) {
       const error = new Error(`Workflow '${name}' not found`);
       this.logger.error({ workflow: name }, error.message);
       throw error;
     }
 
-    this.logger.info({ workflow: name }, 'Starting workflow execution');
+    this.logger.info({ workflow: name }, "Starting workflow execution");
     return workflow.execute(input, metadata);
   }
 
   async runWorkflowsParallel(
-    workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>
+    workflows: Array<{
+      name: string;
+      input?: unknown;
+      metadata?: Record<string, unknown>;
+    }>
   ): Promise<WorkflowResult[]> {
-    this.logger.info({ count: workflows.length }, 'Starting parallel workflow execution');
-    return Promise.all(workflows.map(({ name, input, metadata }) =>
-      this.runWorkflow(name, input, metadata)
-    ));
+    this.logger.info(
+      { count: workflows.length },
+      "Starting parallel workflow execution"
+    );
+    return Promise.all(
+      workflows.map(({ name, input, metadata }) =>
+        this.runWorkflow(name, input, metadata)
+      )
+    );
   }
 
   async runWorkflowsSequential(
-    workflows: Array<{ name: string; input?: unknown; metadata?: Record<string, unknown> }>
+    workflows: Array<{
+      name: string;
+      input?: unknown;
+      metadata?: Record<string, unknown>;
+    }>
   ): Promise<WorkflowResult[]> {
-    this.logger.info({ count: workflows.length }, 'Starting sequential workflow execution');
+    this.logger.info(
+      { count: workflows.length },
+      "Starting sequential workflow execution"
+    );
 
     const results: WorkflowResult[] = [];
     let currentInput: unknown;
 
     for (const { name, input, metadata } of workflows) {
-      const result = await this.runWorkflow(name, input ?? currentInput, metadata);
+      const result = await this.runWorkflow(
+        name,
+        input ?? currentInput,
+        metadata
+      );
       results.push(result);
       currentInput = this.extractNextInput(result, currentInput);
     }

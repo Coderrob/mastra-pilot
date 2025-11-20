@@ -1,9 +1,9 @@
-import { execa, ExecaReturnValue } from 'execa';
-import { z } from 'zod';
-import { BaseStep, IStepContext, StepResult } from '@repo/core';
+import { execa, ExecaReturnValue } from "execa";
+import { z } from "zod";
+import { BaseStep, IStepContext, StepResult } from "@repo/core";
 
 export const ShellInputSchema = z.object({
-  command: z.string().min(1, 'Command is required'),
+  command: z.string().min(1, "Command is required"),
   args: z.array(z.string()).optional().default([]),
   cwd: z.string().optional(),
   env: z.record(z.string()).optional(),
@@ -28,12 +28,24 @@ export class ShellStep extends BaseStep<ShellInput, ShellOutput> {
   private readonly allowedCommands: Set<string>;
 
   constructor(allowedCommands?: string[]) {
-    super('ShellStep');
+    super("ShellStep");
     this.allowedCommands = new Set(
       allowedCommands ?? [
-        'ls', 'cat', 'echo', 'pwd', 'mkdir', 'rm', 'cp', 'mv',
-        'node', 'npm', 'pnpm', 'yarn',
-        'git', 'docker', 'kubectl',
+        "ls",
+        "cat",
+        "echo",
+        "pwd",
+        "mkdir",
+        "rm",
+        "cp",
+        "mv",
+        "node",
+        "npm",
+        "pnpm",
+        "yarn",
+        "git",
+        "docker",
+        "kubectl",
       ]
     );
   }
@@ -61,17 +73,23 @@ export class ShellStep extends BaseStep<ShellInput, ShellOutput> {
       return securityCheck.result!;
     }
 
-    _context.logger.debug({ command: input.command, args: input.args, cwd: input.cwd }, 'Executing shell command');
+    _context.logger.debug(
+      { command: input.command, args: input.args, cwd: input.cwd },
+      "Executing shell command"
+    );
 
     const result = await this.executeCommand(input);
-    
+
     return {
       success: result.exitCode === 0,
       data: this.createShellOutput(result),
     };
   }
 
-  private validateCommand(command: string): { valid: boolean; result?: StepResult<ShellOutput> } {
+  private validateCommand(command: string): {
+    valid: boolean;
+    result?: StepResult<ShellOutput>;
+  } {
     if (this.allowedCommands.has(command)) {
       return { valid: true };
     }
