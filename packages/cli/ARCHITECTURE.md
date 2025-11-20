@@ -119,8 +119,8 @@ const STEP_REGISTRY: Record<StepType, StepConstructor> = {
 Used for creating logger and output writer:
 
 ```typescript
-export function createLogger(level?: string): ILogger
-export function createOutputWriter(): IOutputWriter
+export function createLogger(level?: string): ILogger;
+export function createOutputWriter(): IOutputWriter;
 ```
 
 ### Adapter Pattern

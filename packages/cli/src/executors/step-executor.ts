@@ -1,5 +1,5 @@
-import { BaseStep, ILogger, StepResult, StepType, UnknownStepTypeError } from '@repo/core';
-import { CsvWriteStep, FileReadStep, GitStep, HttpStep, ShellStep } from '@repo/steps';
+import { BaseStep, ILogger, StepResult, StepType, UnknownStepTypeError } from "@repo/core";
+import { CsvWriteStep, FileReadStep, GitStep, HttpStep, ShellStep } from "@repo/steps";
 
 type StepConstructor = new () => BaseStep<unknown, unknown>;
 
@@ -13,12 +13,12 @@ const STEP_REGISTRY: Record<StepType, StepConstructor> = {
 
 export function createStep(type: string): BaseStep<unknown, unknown> {
   const StepClass = STEP_REGISTRY[type as StepType];
-  
+
   if (!StepClass) {
     const validTypes = Object.values(StepType);
     throw new UnknownStepTypeError(type, validTypes);
   }
-  
+
   return new StepClass();
 }
 

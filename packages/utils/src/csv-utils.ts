@@ -14,10 +14,7 @@ export class CsvUtils {
   /**
    * Convert array of objects to CSV string
    */
-  static toCSV(
-    data: Record<string, unknown>[],
-    options: CsvOptions = {}
-  ): string {
+  static toCSV(data: Record<string, unknown>[], options: CsvOptions = {}): string {
     const defaults = { header: true, delimiter: ",", quote: '"' };
     return stringify(data, { ...defaults, ...options });
   }
@@ -25,10 +22,7 @@ export class CsvUtils {
   /**
    * Parse CSV string to array of objects
    */
-  static parseCSV(
-    csvString: string,
-    delimiter: string = ","
-  ): Record<string, string>[] {
+  static parseCSV(csvString: string, delimiter: string = ","): Record<string, string>[] {
     const lines = csvString.trim().split("\n");
     if (lines.length === 0) return [];
 
@@ -57,19 +51,19 @@ export class CsvUtils {
     delimiter: string
   ): Record<string, string> {
     const values = line.split(delimiter);
-    return headers.reduce((obj, header, index) => {
-      obj[header] = values[index]?.trim() || "";
-      return obj;
-    }, {} as Record<string, string>);
+    return headers.reduce(
+      (obj, header, index) => {
+        obj[header] = values[index]?.trim() || "";
+        return obj;
+      },
+      {} as Record<string, string>
+    );
   }
 
   /**
    * Validate CSV structure
    */
-  static validateCSV(
-    data: Record<string, unknown>[],
-    requiredColumns: string[]
-  ): boolean {
+  static validateCSV(data: Record<string, unknown>[], requiredColumns: string[]): boolean {
     if (data.length === 0) return false;
 
     const firstRow = data[0];

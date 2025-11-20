@@ -66,14 +66,14 @@ pnpm --filter @repo/cli run mastra run -w dev-auto -p
 ### Programmatic
 
 ```typescript
-import { Runner } from '@repo/core';
-import { createDevAutoWorkflow } from '@repo/workflows';
+import { Runner } from "@repo/core";
+import { createDevAutoWorkflow } from "@repo/workflows";
 
 const runner = new Runner();
 const workflow = createDevAutoWorkflow();
 
 runner.registerWorkflow(workflow);
-const result = await runner.runWorkflow('DevAutoWorkflow');
+const result = await runner.runWorkflow("DevAutoWorkflow");
 ```
 
 ## Package Scripts

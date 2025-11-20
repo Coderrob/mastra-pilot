@@ -44,9 +44,5 @@ function hasBasicLogMethods(logger: Record<string, unknown>): boolean {
 }
 
 function hasAdvancedLogMethods(logger: Record<string, unknown>): boolean {
-  return (
-    isFunction(logger.error) &&
-    isFunction(logger.fatal) &&
-    isFunction(logger.child)
-  );
+  return isFunction(logger.error) && isFunction(logger.fatal) && isFunction(logger.child);
 }

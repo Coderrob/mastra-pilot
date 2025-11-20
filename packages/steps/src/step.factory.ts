@@ -9,10 +9,7 @@ import { ShellStep } from "./shell.step.js";
  * StepFactory implements the Factory pattern for creating step instances
  */
 export class StepFactory {
-  private static readonly stepRegistry = new Map<
-    string,
-    () => BaseStep<unknown, unknown>
-  >([
+  private static readonly stepRegistry = new Map<string, () => BaseStep<unknown, unknown>>([
     ["file-read", () => new FileReadStep()],
     ["csv-write", () => new CsvWriteStep()],
     ["http", () => new HttpStep()],

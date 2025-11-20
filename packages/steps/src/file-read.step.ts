@@ -37,9 +37,7 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
     }
   }
 
-  private async executeFileRead(
-    input: FileReadInput
-  ): Promise<StepResult<FileReadOutput>> {
+  private async executeFileRead(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
     const { path, baseDir } = input;
 
     const exists = await FileUtils.existsSafe(path, baseDir);
@@ -57,18 +55,14 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
     };
   }
 
-  private async readFileContent(
-    input: FileReadInput
-  ): Promise<StepResult<FileReadOutput>> {
+  private async readFileContent(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
     const { from, to } = input;
     const hasRange = from !== 1 || to !== -1;
 
     return hasRange ? this.readFileByRange(input) : this.readFullFile(input);
   }
 
-  private async readFileByRange(
-    input: FileReadInput
-  ): Promise<StepResult<FileReadOutput>> {
+  private async readFileByRange(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
     const { path, from, to, baseDir } = input;
     const lines = await FileUtils.readFileLines(path, from, to, baseDir);
     const content = lines.join("\n");
@@ -83,9 +77,7 @@ export class FileReadStep extends BaseStep<FileReadInput, FileReadOutput> {
     };
   }
 
-  private async readFullFile(
-    input: FileReadInput
-  ): Promise<StepResult<FileReadOutput>> {
+  private async readFullFile(input: FileReadInput): Promise<StepResult<FileReadOutput>> {
     const { path, baseDir } = input;
     const content = await FileUtils.readFileSafe(path, baseDir);
 

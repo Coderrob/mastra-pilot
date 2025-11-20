@@ -1,14 +1,14 @@
-import { z } from 'zod';
-import type { 
-  IStepConfig, 
-  IStepExecutionContext, 
-  IStepInstance, 
+import { z } from "zod";
+import type {
+  IStepConfig,
+  IStepExecutionContext,
+  IStepInstance,
   IWorkflowConfig,
   IWorkflowExecutionContext,
   IWorkflowExecutionResult,
   IWorkflowInstance,
-  IWorkflowProvider 
-} from '../workflow-provider.js';
+  IWorkflowProvider,
+} from "../workflow-provider.js";
 
 /**
  * Mastra workflow provider adapter
@@ -17,12 +17,14 @@ import type {
  * The adapter provides the structure for future integration while maintaining type safety.
  */
 export class MastraAdapter implements IWorkflowProvider {
-  createStep<TIn = unknown, TOut = unknown>(config: IStepConfig<TIn, TOut>): IStepInstance<TIn, TOut> {
+  createStep<TIn = unknown, TOut = unknown>(
+    config: IStepConfig<TIn, TOut>
+  ): IStepInstance<TIn, TOut> {
     const { id, description, inputSchema, outputSchema, execute } = config;
 
     // Use provided schemas or create default ones if not specified
-    const effectiveInputSchema = inputSchema || z.unknown() as z.ZodType<TIn>;
-    const effectiveOutputSchema = outputSchema || z.unknown() as z.ZodType<TOut>;
+    const effectiveInputSchema = inputSchema || (z.unknown() as z.ZodType<TIn>);
+    const effectiveOutputSchema = outputSchema || (z.unknown() as z.ZodType<TOut>);
 
     // Create a step instance that matches IStepInstance interface
     // This provides type-safe execution with Zod schema validation
@@ -40,12 +42,14 @@ export class MastraAdapter implements IWorkflowProvider {
     };
   }
 
-  createWorkflow<TIn = unknown, TOut = unknown>(config: IWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut> {
+  createWorkflow<TIn = unknown, TOut = unknown>(
+    config: IWorkflowConfig<TIn, TOut>
+  ): IWorkflowInstance<TIn, TOut> {
     const { id, name, description, inputSchema, outputSchema, steps } = config;
 
     // Use provided schemas or create default ones if not specified
-    const effectiveInputSchema = inputSchema || z.unknown() as z.ZodType<TIn>;
-    const effectiveOutputSchema = outputSchema || z.unknown() as z.ZodType<TOut>;
+    const effectiveInputSchema = inputSchema || (z.unknown() as z.ZodType<TIn>);
+    const effectiveOutputSchema = outputSchema || (z.unknown() as z.ZodType<TOut>);
 
     // Create a workflow instance that matches IWorkflowInstance interface
     // This provides type-safe workflow composition with schema validation
@@ -57,9 +61,9 @@ export class MastraAdapter implements IWorkflowProvider {
       outputSchema: effectiveOutputSchema,
       steps: Object.freeze([...steps]),
       execute: async (input: TIn, context?: IWorkflowExecutionContext) => {
-        this.validateInput(inputSchema, effectiveInputSchema, input, 'Workflow input');
+        this.validateInput(inputSchema, effectiveInputSchema, input, "Workflow input");
         const output = await this.executeStepsSequentially<TIn, TOut>(steps, input, context);
-        this.validateOutput(outputSchema, effectiveOutputSchema, output, 'Workflow output');
+        this.validateOutput(outputSchema, effectiveOutputSchema, output, "Workflow output");
         return output;
       },
     };
@@ -71,7 +75,7 @@ export class MastraAdapter implements IWorkflowProvider {
     context?: IWorkflowExecutionContext
   ): Promise<IWorkflowExecutionResult<TOut>> {
     const startTime = Date.now();
-    
+
     try {
       const data = await this.executeWorkflow(workflow, input, context);
       return this.createSuccessResult(data, startTime);
@@ -84,7 +88,7 @@ export class MastraAdapter implements IWorkflowProvider {
     schema: z.ZodType<T> | undefined,
     effectiveSchema: z.ZodType<T>,
     input: T,
-    prefix: string = 'Input'
+    prefix: string = "Input"
   ): void {
     if (!schema) return;
     this.validateWithSchema(effectiveSchema, input, prefix);
@@ -94,17 +98,13 @@ export class MastraAdapter implements IWorkflowProvider {
     schema: z.ZodType<T> | undefined,
     effectiveSchema: z.ZodType<T>,
     output: T,
-    prefix: string = 'Output'
+    prefix: string = "Output"
   ): void {
     if (!schema) return;
     this.validateWithSchema(effectiveSchema, output, prefix);
   }
 
-  private validateWithSchema<T>(
-    schema: z.ZodType<T>,
-    data: T,
-    prefix: string
-  ): void {
+  private validateWithSchema<T>(schema: z.ZodType<T>, data: T, prefix: string): void {
     const parseResult = schema.safeParse(data);
     if (!parseResult.success) {
       throw new Error(`${prefix} validation failed: ${parseResult.error.message}`);
@@ -144,7 +144,10 @@ export class MastraAdapter implements IWorkflowProvider {
     };
   }
 
-  private createErrorResult<TOut>(error: unknown, startTime: number): IWorkflowExecutionResult<TOut> {
+  private createErrorResult<TOut>(
+    error: unknown,
+    startTime: number
+  ): IWorkflowExecutionResult<TOut> {
     return {
       success: false,
       data: undefined,

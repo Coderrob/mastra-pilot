@@ -25,9 +25,7 @@ describe("StepFactory", () => {
 
   it("should throw error for unknown step type", () => {
     const unknownType = "unknown";
-    expect(() => StepFactory.createStep(unknownType)).toThrow(
-      `Unknown step type: ${unknownType}`
-    );
+    expect(() => StepFactory.createStep(unknownType)).toThrow(`Unknown step type: ${unknownType}`);
   });
 
   it("should return all registered step types", () => {
@@ -51,12 +49,9 @@ describe("StepFactory", () => {
       { type: "http", expectedName: "HttpStep" },
       { type: "shell", expectedName: "ShellStep" },
       { type: "git", expectedName: "GitStep" },
-    ])(
-      "should create $type step with name $expectedName",
-      ({ type, expectedName }) => {
-        const step = StepFactory.createStep(type);
-        expect(step.getName()).toBe(expectedName);
-      }
-    );
+    ])("should create $type step with name $expectedName", ({ type, expectedName }) => {
+      const step = StepFactory.createStep(type);
+      expect(step.getName()).toBe(expectedName);
+    });
   });
 });

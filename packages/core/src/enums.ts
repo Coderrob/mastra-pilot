@@ -2,23 +2,23 @@
  * Log level enum for consistent logging configuration
  */
 export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal',
+  TRACE = "trace",
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
+  FATAL = "fatal",
 }
 
 /**
  * Step type enum for factory pattern
  */
 export enum StepType {
-  FILE_READ = 'file-read',
-  CSV_WRITE = 'csv-write',
-  HTTP = 'http',
-  SHELL = 'shell',
-  GIT = 'git',
+  FILE_READ = "file-read",
+  CSV_WRITE = "csv-write",
+  HTTP = "http",
+  SHELL = "shell",
+  GIT = "git",
 }
 
 /**
@@ -37,5 +37,5 @@ export enum ExitCode {
  * Workflow identifier enum for known workflows
  */
 export enum WorkflowId {
-  DEV_AUTO = 'dev-auto',
+  DEV_AUTO = "dev-auto",
 }

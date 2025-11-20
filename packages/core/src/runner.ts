@@ -91,14 +91,9 @@ export class Runner implements IRunner {
       metadata?: Record<string, unknown>;
     }>
   ): Promise<WorkflowResult[]> {
-    this.logger.info(
-      { count: workflows.length },
-      "Starting parallel workflow execution"
-    );
+    this.logger.info({ count: workflows.length }, "Starting parallel workflow execution");
     return Promise.all(
-      workflows.map(({ name, input, metadata }) =>
-        this.runWorkflow(name, input, metadata)
-      )
+      workflows.map(({ name, input, metadata }) => this.runWorkflow(name, input, metadata))
     );
   }
 
@@ -109,20 +104,13 @@ export class Runner implements IRunner {
       metadata?: Record<string, unknown>;
     }>
   ): Promise<WorkflowResult[]> {
-    this.logger.info(
-      { count: workflows.length },
-      "Starting sequential workflow execution"
-    );
+    this.logger.info({ count: workflows.length }, "Starting sequential workflow execution");
 
     const results: WorkflowResult[] = [];
     let currentInput: unknown;
 
     for (const { name, input, metadata } of workflows) {
-      const result = await this.runWorkflow(
-        name,
-        input ?? currentInput,
-        metadata
-      );
+      const result = await this.runWorkflow(name, input ?? currentInput, metadata);
       results.push(result);
       currentInput = this.extractNextInput(result, currentInput);
     }

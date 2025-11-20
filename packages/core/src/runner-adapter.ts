@@ -36,8 +36,7 @@ export interface IRunnerAdapterOptions {
 export class RunnerAdapter {
   private readonly logger: ILogger;
   private readonly facade: WorkflowFacade;
-  private readonly workflows: Map<string, Readonly<WorkflowInstance>> =
-    new Map();
+  private readonly workflows: Map<string, Readonly<WorkflowInstance>> = new Map();
 
   constructor(options: IRunnerAdapterOptions = {}) {
     this.logger = this.createLogger(options);
@@ -84,9 +83,7 @@ export class RunnerAdapter {
     return "unnamed-workflow";
   }
 
-  private hasWorkflowId(
-    workflow: WorkflowInstance
-  ): workflow is WorkflowInstance & { id: string } {
+  private hasWorkflowId(workflow: WorkflowInstance): workflow is WorkflowInstance & { id: string } {
     return hasId(workflow) && workflow.id !== undefined && workflow.id !== "";
   }
 
@@ -102,10 +99,7 @@ export class RunnerAdapter {
     const workflow = this.workflows.get(id);
 
     if (!workflow) {
-      const error = new WorkflowExecutionError(
-        `Workflow '${id}' not found`,
-        id
-      );
+      const error = new WorkflowExecutionError(`Workflow '${id}' not found`, id);
       this.logger.error({ workflow: id }, error.message);
       throw error;
     }
@@ -137,10 +131,7 @@ export class RunnerAdapter {
       context?: Record<string, unknown>;
     }>
   ): Promise<IWorkflowExecutionResult[]> {
-    this.logger.info(
-      { count: workflows.length },
-      "Starting parallel workflow execution"
-    );
+    this.logger.info({ count: workflows.length }, "Starting parallel workflow execution");
 
     const promises = workflows.map(({ id, input, context }) =>
       this.runWorkflow(id, input, context)
@@ -159,10 +150,7 @@ export class RunnerAdapter {
       context?: Record<string, unknown>;
     }>
   ): Promise<IWorkflowExecutionResult[]> {
-    this.logger.info(
-      { count: workflows.length },
-      "Starting sequential workflow execution"
-    );
+    this.logger.info({ count: workflows.length }, "Starting sequential workflow execution");
 
     const results: IWorkflowExecutionResult[] = [];
     let currentInput: unknown;
@@ -180,17 +168,10 @@ export class RunnerAdapter {
     config: { id: string; input?: unknown; context?: Record<string, unknown> },
     currentInput: unknown
   ): Promise<IWorkflowExecutionResult> {
-    return this.runWorkflow(
-      config.id,
-      config.input ?? currentInput,
-      config.context
-    );
+    return this.runWorkflow(config.id, config.input ?? currentInput, config.context);
   }
 
-  private updateInputFromResult(
-    result: IWorkflowExecutionResult,
-    currentInput: unknown
-  ): unknown {
+  private updateInputFromResult(result: IWorkflowExecutionResult, currentInput: unknown): unknown {
     return result.success && result.data ? result.data : currentInput;
   }
 

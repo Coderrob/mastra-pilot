@@ -94,18 +94,12 @@ export class Workflow {
     );
   }
 
-  private createResult(
-    results: StepResult<unknown>[],
-    startTime: number
-  ): WorkflowResult {
+  private createResult(results: StepResult<unknown>[], startTime: number): WorkflowResult {
     const duration = Date.now() - startTime;
     const success = results.every((r) => r.success);
     const error = results.find((r) => !r.success)?.error;
 
-    this.logger.info(
-      { workflow: this.name, duration, success },
-      "Workflow execution completed"
-    );
+    this.logger.info({ workflow: this.name, duration, success }, "Workflow execution completed");
 
     return {
       success,

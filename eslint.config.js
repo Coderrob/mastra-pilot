@@ -91,6 +91,7 @@ export default [
     ignores: [
       "**/node_modules/**",
       "**/dist/**",
+      "**/.mastra/**",
       "**/vitest.config.ts",
       "**/turbo.json",
       "eslint.config.js",

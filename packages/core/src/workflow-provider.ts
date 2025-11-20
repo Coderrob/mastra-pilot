@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ILogger } from './logger.js';
+import { z } from "zod";
+import { ILogger } from "./logger.js";
 
 /**
  * Step execution context with typed dependencies
@@ -39,8 +39,12 @@ export interface IWorkflowInstance<TIn = unknown, TOut = unknown> {
  * Allows swapping between Mastra, LangGraph, or other workflow engines
  */
 export interface IWorkflowProvider {
-  createStep<TIn = unknown, TOut = unknown>(config: IStepConfig<TIn, TOut>): IStepInstance<TIn, TOut>;
-  createWorkflow<TIn = unknown, TOut = unknown>(config: IWorkflowConfig<TIn, TOut>): IWorkflowInstance<TIn, TOut>;
+  createStep<TIn = unknown, TOut = unknown>(
+    config: IStepConfig<TIn, TOut>
+  ): IStepInstance<TIn, TOut>;
+  createWorkflow<TIn = unknown, TOut = unknown>(
+    config: IWorkflowConfig<TIn, TOut>
+  ): IWorkflowInstance<TIn, TOut>;
   execute<TIn = unknown, TOut = unknown>(
     workflow: IWorkflowInstance<TIn, TOut>,
     input: TIn,

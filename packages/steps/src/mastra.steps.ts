@@ -25,10 +25,7 @@ export const fileReadStepConfig = createStepWithLogger({
   }),
   execute: async (input, context) => {
     const { logger } = context;
-    logger.info(
-      { path: input.path, from: input.from, to: input.to },
-      "Reading file"
-    );
+    logger.info({ path: input.path, from: input.from, to: input.to }, "Reading file");
     return await executeFileRead(input);
   },
 });
@@ -55,15 +52,13 @@ export const httpStepConfig = createStepWithLogger({
     const { logger } = context;
     const axios = (await import("axios")).default;
 
-    logger.info(
-      { url: input.url, method: input.method },
-      "Making HTTP request"
-    );
+    logger.info({ url: input.url, method: input.method }, "Making HTTP request");
 
     const response = await axios({
       url: input.url,
       method: input.method,
       headers: input.headers,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: input.data,
       validateStatus: () => true,
     });
@@ -71,6 +66,7 @@ export const httpStepConfig = createStepWithLogger({
     return {
       status: response.status,
       statusText: response.statusText,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: response.data,
       headers: response.headers as Record<string, string>,
     };
@@ -80,9 +76,7 @@ export const httpStepConfig = createStepWithLogger({
 /**
  * Shell command step using Mastra's step system
  */
-export const shellStepConfig = (
-  allowedCommands: string[] = ["ls", "cat", "echo", "pwd"]
-) =>
+export const shellStepConfig = (allowedCommands: string[] = ["ls", "cat", "echo", "pwd"]) =>
   createStepWithLogger({
     id: "shell-command",
     description: "Execute shell command",
@@ -104,10 +98,7 @@ export const shellStepConfig = (
         throw new Error(`Command '${input.command}' is not allowed`);
       }
 
-      logger.info(
-        { command: input.command, args: input.args },
-        "Executing shell command"
-      );
+      logger.info({ command: input.command, args: input.args }, "Executing shell command");
 
       const result = await execa(input.command, input.args, {
         cwd: input.cwd,
@@ -157,10 +148,7 @@ function getTo(to: number | undefined): number {
 /**
  * Validate that file exists or throw error
  */
-async function validateFileExists(
-  path: string,
-  baseDir: string
-): Promise<void> {
+async function validateFileExists(path: string, baseDir: string): Promise<void> {
   const exists = await FileUtils.existsSafe(path, baseDir);
   if (!exists) {
     throw new Error(`File not found: ${path}`);

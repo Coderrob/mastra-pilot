@@ -50,10 +50,7 @@ export class ShellStep extends BaseStep<ShellInput, ShellOutput> {
     );
   }
 
-  protected async run(
-    input: ShellInput,
-    _context: IStepContext
-  ): Promise<StepResult<ShellOutput>> {
+  protected async run(input: ShellInput, _context: IStepContext): Promise<StepResult<ShellOutput>> {
     try {
       return await this.executeValidatedCommand(input, _context);
     } catch (error) {

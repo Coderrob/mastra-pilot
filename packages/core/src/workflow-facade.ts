@@ -15,9 +15,7 @@ import type {
  * Workflow Facade - Provider-agnostic workflow orchestration
  * Uses adapter pattern to support multiple workflow engines (Mastra, LangGraph, etc.)
  */
-export class WorkflowFacade<
-  TProvider extends IWorkflowProvider = IWorkflowProvider,
-> {
+export class WorkflowFacade<TProvider extends IWorkflowProvider = IWorkflowProvider> {
   private provider: TProvider;
   private workflows: Map<string, Readonly<IWorkflowInstance>> = new Map();
 
@@ -42,10 +40,7 @@ export class WorkflowFacade<
   ): IWorkflowInstance<TIn, TOut> {
     const workflow = this.provider.createWorkflow(config);
     // Store as readonly to prevent mutations - cast to unknown for storage
-    this.workflows.set(
-      config.id,
-      Object.freeze(workflow as unknown as IWorkflowInstance)
-    );
+    this.workflows.set(config.id, Object.freeze(workflow as unknown as IWorkflowInstance));
     return workflow;
   }
 
@@ -62,18 +57,11 @@ export class WorkflowFacade<
 
     if (!workflow) {
       const errorId = this.getWorkflowErrorId(workflowIdOrInstance);
-      throw new WorkflowExecutionError(
-        `Workflow not found: ${errorId}`,
-        errorId
-      );
+      throw new WorkflowExecutionError(`Workflow not found: ${errorId}`, errorId);
     }
 
     // Remove readonly for execution - structurally compatible
-    return this.provider.execute(
-      workflow as IWorkflowInstance<TIn, TOut>,
-      input,
-      context
-    );
+    return this.provider.execute(workflow as IWorkflowInstance<TIn, TOut>, input, context);
   }
 
   private resolveWorkflow<TIn, TOut>(
@@ -117,18 +105,14 @@ export interface IWorkflowExecutionResult<TOut = unknown> {
 }
 
 // Alias for backward compatibility
-export type WorkflowExecutionResult<TOut = unknown> =
-  IWorkflowExecutionResult<TOut>;
+export type WorkflowExecutionResult<TOut = unknown> = IWorkflowExecutionResult<TOut>;
 
 /**
  * Helper to create step config with logger injection
  */
 export function createStepWithLogger<TIn, TOut>(
   config: Omit<IStepConfig<TIn, TOut>, "execute"> & {
-    execute: (
-      input: TIn,
-      context: IStepExecutionContext & { logger: ILogger }
-    ) => Promise<TOut>;
+    execute: (input: TIn, context: IStepExecutionContext & { logger: ILogger }) => Promise<TOut>;
   }
 ): IStepConfig<TIn, TOut> {
   return config as IStepConfig<TIn, TOut>;

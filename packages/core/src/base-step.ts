@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { ILogger } from './logger.js';
+import { z } from "zod";
+import { ILogger } from "./logger.js";
 
 export interface IStepContext {
   logger: ILogger;
@@ -57,13 +57,13 @@ export abstract class BaseStep<TIn = unknown, TOut = unknown> {
   }
 
   private logStart(context: IStepContext, input: TIn): void {
-    context.logger.info({ step: this.name, input }, 'Step started');
+    context.logger.info({ step: this.name, input }, "Step started");
   }
 
   private logSuccess(context: IStepContext, startTime: number, success: boolean): void {
     context.logger.info(
       { step: this.name, duration: Date.now() - startTime, success },
-      'Step completed'
+      "Step completed"
     );
   }
 
@@ -71,7 +71,7 @@ export abstract class BaseStep<TIn = unknown, TOut = unknown> {
     const stepError = error instanceof Error ? error : new Error(String(error));
     context.logger.error(
       { step: this.name, duration: Date.now() - startTime, error: stepError.message },
-      'Step failed'
+      "Step failed"
     );
     return { success: false, error: stepError };
   }

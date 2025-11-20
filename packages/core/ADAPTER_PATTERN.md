@@ -61,7 +61,7 @@ const facade = new WorkflowFacade();
 
 // Create steps
 const step = facade.createStep({
-  id: 'my-step',
+  id: "my-step",
   execute: async (input, context) => {
     // context includes logger, metadata, and custom dependencies
     return processedData;
@@ -70,14 +70,14 @@ const step = facade.createStep({
 
 // Create workflow
 const workflow = facade.createWorkflow({
-  id: 'my-workflow',
+  id: "my-workflow",
   steps: [step],
 });
 
 // Execute with context
 const result = await facade.execute(workflow, input, {
   logger: pino(),
-  metadata: { source: 'api' },
+  metadata: { source: "api" },
 });
 ```
 
@@ -98,7 +98,7 @@ Inside steps, access dependencies:
 
 ```typescript
 createStep({
-  id: 'step-with-deps',
+  id: "step-with-deps",
   execute: async (input, context) => {
     const { logger, database, cache } = context;
     // Use injected dependencies
@@ -111,24 +111,24 @@ createStep({
 ### Basic Usage
 
 ```typescript
-import { WorkflowFacade, MastraAdapter } from '@repo/core';
+import { WorkflowFacade, MastraAdapter } from "@repo/core";
 
 const facade = new WorkflowFacade(new MastraAdapter());
 
 const step = facade.createStep({
-  id: 'process',
+  id: "process",
   execute: async (input, context) => {
-    context.logger.info('Processing...');
-    return { result: 'processed' };
+    context.logger.info("Processing...");
+    return { result: "processed" };
   },
 });
 
 const workflow = facade.createWorkflow({
-  id: 'simple-workflow',
+  id: "simple-workflow",
   steps: [step],
 });
 
-const result = await facade.execute(workflow, { data: 'test' });
+const result = await facade.execute(workflow, { data: "test" });
 ```
 
 ### With Dependency Injection
@@ -136,9 +136,9 @@ const result = await facade.execute(workflow, { data: 'test' });
 ```typescript
 const result = await facade.execute(
   workflow,
-  { data: 'test' },
+  { data: "test" },
   {
-    logger: pino({ level: 'debug' }),
+    logger: pino({ level: "debug" }),
     database: db,
     apiClient: client,
   }
@@ -148,11 +148,9 @@ const result = await facade.execute(
 ### Provider-Agnostic
 
 ```typescript
-function createWorkflow(providerType: 'mastra' | 'langgraph') {
-  const adapter = providerType === 'mastra' 
-    ? new MastraAdapter() 
-    : new LangGraphAdapter();
-  
+function createWorkflow(providerType: "mastra" | "langgraph") {
+  const adapter = providerType === "mastra" ? new MastraAdapter() : new LangGraphAdapter();
+
   return new WorkflowFacade(adapter);
 }
 ```
@@ -163,10 +161,10 @@ The legacy system (BaseStep, Workflow, Runner) is still available for backward c
 
 ```typescript
 // Legacy (still works)
-import { BaseStep, Workflow, Runner } from '@repo/core';
+import { BaseStep, Workflow, Runner } from "@repo/core";
 
 // New adapter-based (recommended)
-import { WorkflowFacade, MastraAdapter } from '@repo/core';
+import { WorkflowFacade, MastraAdapter } from "@repo/core";
 ```
 
 ## Benefits
@@ -183,7 +181,7 @@ import { WorkflowFacade, MastraAdapter } from '@repo/core';
 The `RunnerAdapter` provides execution orchestration for workflows using the adapter pattern:
 
 ```typescript
-import { RunnerAdapter, MastraAdapter } from '@repo/core';
+import { RunnerAdapter, MastraAdapter } from "@repo/core";
 
 const runner = new RunnerAdapter({
   logger: pino(),
@@ -191,22 +189,22 @@ const runner = new RunnerAdapter({
 });
 
 // Register workflows
-runner.registerWorkflow(workflow1, 'workflow-1');
-runner.registerWorkflow(workflow2, 'workflow-2');
+runner.registerWorkflow(workflow1, "workflow-1");
+runner.registerWorkflow(workflow2, "workflow-2");
 
 // Execute single workflow
-const result = await runner.runWorkflow('workflow-1', input, context);
+const result = await runner.runWorkflow("workflow-1", input, context);
 
 // Execute multiple workflows sequentially
 const results = await runner.runWorkflowsSequential([
-  { id: 'workflow-1', input: data1 },
-  { id: 'workflow-2', input: data2 },
+  { id: "workflow-1", input: data1 },
+  { id: "workflow-2", input: data2 },
 ]);
 
 // Execute multiple workflows in parallel
 const results = await runner.runWorkflowsParallel([
-  { id: 'workflow-1', input: data1 },
-  { id: 'workflow-2', input: data2 },
+  { id: "workflow-1", input: data1 },
+  { id: "workflow-2", input: data2 },
 ]);
 ```
 
@@ -222,16 +220,16 @@ const results = await runner.runWorkflowsParallel([
 
 ```typescript
 // Before (legacy Runner)
-import { Runner } from '@repo/core';
+import { Runner } from "@repo/core";
 const runner = new Runner({ logger });
 runner.registerWorkflow(workflow);
-await runner.runWorkflow('workflow-name', input);
+await runner.runWorkflow("workflow-name", input);
 
 // After (RunnerAdapter with Mastra)
-import { RunnerAdapter, MastraAdapter } from '@repo/core';
+import { RunnerAdapter, MastraAdapter } from "@repo/core";
 const runner = new RunnerAdapter({ logger, provider: new MastraAdapter() });
-runner.registerWorkflow(workflow, 'workflow-name');
-await runner.runWorkflow('workflow-name', input);
+runner.registerWorkflow(workflow, "workflow-name");
+await runner.runWorkflow("workflow-name", input);
 ```
 
 ## Future Enhancements

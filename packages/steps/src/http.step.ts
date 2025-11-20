@@ -4,12 +4,9 @@ import { BaseStep, IStepContext, StepResult } from "@repo/core";
 
 export const HttpInputSchema = z.object({
   url: z.string().url("Valid URL is required"),
-  method: z
-    .enum(["GET", "POST", "PUT", "DELETE", "PATCH"])
-    .optional()
-    .default("GET"),
+  method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional().default("GET"),
   headers: z.record(z.string()).optional(),
-  data: z.any().optional(),
+  data: z.unknown().optional(),
   params: z.record(z.string()).optional(),
   timeout: z.number().int().positive().optional().default(30000),
 });
@@ -19,7 +16,7 @@ export type HttpInput = z.infer<typeof HttpInputSchema>;
 export interface HttpOutput {
   status: number;
   statusText: string;
-  data: any;
+  data: unknown;
   headers: Record<string, string>;
 }
 
@@ -32,10 +29,7 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
     super("HttpStep");
   }
 
-  protected async run(
-    input: HttpInput,
-    _context: IStepContext
-  ): Promise<StepResult<HttpOutput>> {
+  protected async run(input: HttpInput, _context: IStepContext): Promise<StepResult<HttpOutput>> {
     try {
       const config = this.createRequestConfig(input);
       _context.logger.debug({ config }, "Making HTTP request");
@@ -75,7 +69,7 @@ export class HttpStep extends BaseStep<HttpInput, HttpOutput> {
     return {
       status: response.status,
       statusText: response.statusText,
-      data: response.data,
+      data: response.data as unknown,
       headers: response.headers as Record<string, string>,
     };
   }

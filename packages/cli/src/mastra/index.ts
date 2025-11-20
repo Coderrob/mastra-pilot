@@ -1,18 +1,18 @@
-import { Mastra } from '@mastra/core';
-import { createStep, createWorkflow } from '@mastra/core/workflows';
-import { z } from 'zod';
+import { Mastra } from "@mastra/core";
+import { createStep, createWorkflow } from "@mastra/core/workflows";
+import { z } from "zod";
 
 /**
  * Example workflow step: Say hello
  */
 const helloStep = createStep({
-  id: 'hello',
-  description: 'Say hello',
+  id: "hello",
+  description: "Say hello",
   inputSchema: z.object({
-    name: z.string().describe('Name to greet'),
+    name: z.string().describe("Name to greet"),
   }),
   outputSchema: z.object({
-    message: z.string().describe('Greeting message'),
+    message: z.string().describe("Greeting message"),
   }),
   execute: ({ inputData }) => {
     const { name } = inputData;
@@ -26,13 +26,13 @@ const helloStep = createStep({
  * Hello world workflow
  */
 const helloWorkflow = createWorkflow({
-  id: 'hello-world',
-  description: 'Simple hello world workflow',
+  id: "hello-world",
+  description: "Simple hello world workflow",
   inputSchema: z.object({
-    name: z.string().describe('Name to greet'),
+    name: z.string().describe("Name to greet"),
   }),
   outputSchema: z.object({
-    message: z.string().describe('Greeting message'),
+    message: z.string().describe("Greeting message"),
   }),
   steps: [helloStep],
 }).then(helloStep);
@@ -42,6 +42,6 @@ const helloWorkflow = createWorkflow({
  */
 export const mastra = new Mastra({
   workflows: {
-    'hello-world': helloWorkflow,
+    "hello-world": helloWorkflow,
   },
 });

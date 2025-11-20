@@ -15,9 +15,7 @@ export class FileUtils {
     const resolvedBase = path.resolve(baseDir);
 
     if (!resolvedPath.startsWith(resolvedBase)) {
-      throw new Error(
-        `Path traversal detected: ${filePath} is outside ${baseDir}`
-      );
+      throw new Error(`Path traversal detected: ${filePath} is outside ${baseDir}`);
     }
   }
 

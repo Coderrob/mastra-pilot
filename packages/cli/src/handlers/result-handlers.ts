@@ -1,5 +1,5 @@
-import { ILogger } from '@repo/core';
-import { IOutputWriter } from '../output/types.js';
+import { ILogger } from "@repo/core";
+import { IOutputWriter } from "../output/types.js";
 
 export function handleSuccess(writer: IOutputWriter, message: string, data?: unknown): never {
   writer.info(message, data);
@@ -13,6 +13,6 @@ export function handleError(
   context: string
 ): never {
   const err = error instanceof Error ? error : new Error(String(error));
-  logger.error({ error: err, context }, 'Execution failed');
+  logger.error({ error: err, context }, "Execution failed");
   writer.fatal(context, err);
 }

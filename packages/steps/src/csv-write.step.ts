@@ -38,9 +38,7 @@ export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
     }
   }
 
-  private async executeCsvWrite(
-    input: CsvWriteInput
-  ): Promise<StepResult<CsvWriteOutput>> {
+  private async executeCsvWrite(input: CsvWriteInput): Promise<StepResult<CsvWriteOutput>> {
     const { path, data, baseDir } = input;
 
     if (data.length === 0) {
@@ -77,11 +75,7 @@ export class CsvWriteStep extends BaseStep<CsvWriteInput, CsvWriteOutput> {
     return this.appendToCsv(path, csvContent, baseDir);
   }
 
-  private async appendToCsv(
-    path: string,
-    csvContent: string,
-    baseDir?: string
-  ): Promise<string> {
+  private async appendToCsv(path: string, csvContent: string, baseDir?: string): Promise<string> {
     const dir = baseDir ?? process.cwd();
     const exists = await FileUtils.existsSafe(path, dir);
     if (!exists) {
