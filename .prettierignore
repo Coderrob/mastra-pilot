@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+.mastra/
+**/.mastra/
+
+# Coverage reports
+coverage/
+**/coverage/
+
+# Test reports
+reports/
+**/reports/
+
+# Cache directories
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Config files (already formatted)
+vitest.config.ts
+**/vitest.config.ts
+turbo.json
+eslint.config.js
+
+# Generated files
+*.d.ts
+!src/**/*.d.ts

@@ -12,29 +12,33 @@ Thank you for your interest in contributing to Mastra Pilot! This document provi
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Coderrob/mastra-pilot.git
 cd mastra-pilot
 ```
 
-2. Install dependencies:
+1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
-3. Build all packages:
+1. Build all packages:
+
 ```bash
 pnpm build
 ```
 
-4. Run tests:
+1. Run tests:
+
 ```bash
 pnpm test
 ```
 
 ## Project Structure
 
-```
+```text
 mastra-pilot/
 ├── packages/
 │   ├── core/           # Core abstractions
@@ -108,6 +112,7 @@ git commit -m "feat: your feature description"
 ```
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -129,8 +134,8 @@ Create a Pull Request on GitHub.
 ### 1. Create Step Class
 
 ```typescript
-import { BaseStep, StepContext, StepResult } from '@repo/core';
-import { z } from 'zod';
+import { BaseStep, StepContext, StepResult } from "@repo/core";
+import { z } from "zod";
 
 export const MyStepInputSchema = z.object({
   // Define input schema
@@ -144,7 +149,7 @@ export interface MyStepOutput {
 
 export class MyStep extends BaseStep<MyStepInput, MyStepOutput> {
   constructor() {
-    super('MyStep');
+    super("MyStep");
   }
 
   protected async run(
@@ -155,7 +160,9 @@ export class MyStep extends BaseStep<MyStepInput, MyStepOutput> {
       // Implement step logic
       return {
         success: true,
-        data: { /* output */ },
+        data: {
+          /* output */
+        },
       };
     } catch (error) {
       return {
@@ -170,25 +177,44 @@ export class MyStep extends BaseStep<MyStepInput, MyStepOutput> {
 ### 2. Add Tests
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { MyStep } from './my-step.js';
-import pino from 'pino';
+import { describe, it, expect } from "vitest";
+import { MyStep } from "./my-step.js";
+import pino from "pino";
 
-describe('MyStep', () => {
-  const logger = pino({ level: 'silent' });
+describe("MyStep", () => {
+  const logger = pino({ level: "silent" });
   const context = { logger, metadata: {} };
 
-  it('should execute successfully', async () => {
+  it("should execute successfully", async () => {
     const step = new MyStep();
-    const result = await step.execute({ /* input */ }, context);
+    const result = await step.execute(
+      {
+        /* input */
+      },
+      context
+    );
 
     expect(result.success).toBe(true);
   });
 
   describe.each([
-    { input: { /* case 1 */ }, expected: { /* expected 1 */ } },
-    { input: { /* case 2 */ }, expected: { /* expected 2 */ } },
-  ])('parameterized tests', ({ input, expected }) => {
+    {
+      input: {
+        /* case 1 */
+      },
+      expected: {
+        /* expected 1 */
+      },
+    },
+    {
+      input: {
+        /* case 2 */
+      },
+      expected: {
+        /* expected 2 */
+      },
+    },
+  ])("parameterized tests", ({ input, expected }) => {
     it(`handles ${JSON.stringify(input)}`, async () => {
       const step = new MyStep();
       const result = await step.execute(input, context);
@@ -204,12 +230,12 @@ describe('MyStep', () => {
 
 ```typescript
 // In step-factory.ts
-import { MyStep } from './my-step.js';
+import { MyStep } from "./my-step.js";
 
 export class StepFactory {
   private static readonly stepRegistry = new Map([
     // ...existing steps
-    ['my-step', () => new MyStep()],
+    ["my-step", () => new MyStep()],
   ]);
 }
 ```
@@ -218,7 +244,7 @@ export class StepFactory {
 
 ```typescript
 // In index.ts
-export { MyStep, MyStepInput, MyStepOutput } from './my-step.js';
+export { MyStep, MyStepInput, MyStepOutput } from "./my-step.js";
 ```
 
 ## Adding New Workflows
@@ -226,21 +252,21 @@ export { MyStep, MyStepInput, MyStepOutput } from './my-step.js';
 ### 1. Create Workflow Function
 
 ```typescript
-import { Workflow, WorkflowOptions } from '@repo/core';
-import { MyStep } from '@repo/steps';
-import pino from 'pino';
+import { Workflow, WorkflowOptions } from "@repo/core";
+import { MyStep } from "@repo/steps";
+import pino from "pino";
 
 export function createMyWorkflow(options?: Partial<WorkflowOptions>): Workflow {
-  const logger = options?.logger ?? pino({ level: 'info' });
+  const logger = options?.logger ?? pino({ level: "info" });
 
   const workflow = new Workflow({
-    name: 'MyWorkflow',
+    name: "MyWorkflow",
     logger,
     continueOnError: false,
     ...options,
   });
 
-  workflow.addStep(new MyStep(), 'step-1');
+  workflow.addStep(new MyStep(), "step-1");
   // Add more steps
 
   return workflow;
@@ -250,17 +276,17 @@ export function createMyWorkflow(options?: Partial<WorkflowOptions>): Workflow {
 ### 2. Add Tests
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { createMyWorkflow } from './my-workflow.js';
-import pino from 'pino';
+import { describe, it, expect } from "vitest";
+import { createMyWorkflow } from "./my-workflow.js";
+import pino from "pino";
 
-describe('MyWorkflow', () => {
-  const logger = pino({ level: 'silent' });
+describe("MyWorkflow", () => {
+  const logger = pino({ level: "silent" });
 
-  it('should create workflow with correct steps', () => {
+  it("should create workflow with correct steps", () => {
     const workflow = createMyWorkflow({ logger });
     const steps = workflow.getSteps();
-    
+
     expect(steps).toHaveLength(/* expected count */);
   });
 });
@@ -281,10 +307,10 @@ Use `it.each` for testing multiple scenarios:
 
 ```typescript
 describe.each([
-  { scenario: 'case1', input: {}, expected: {} },
-  { scenario: 'case2', input: {}, expected: {} },
-])('$scenario', ({ input, expected }) => {
-  it('should handle the scenario', () => {
+  { scenario: "case1", input: {}, expected: {} },
+  { scenario: "case2", input: {}, expected: {} },
+])("$scenario", ({ input, expected }) => {
+  it("should handle the scenario", () => {
     // Test implementation
   });
 });

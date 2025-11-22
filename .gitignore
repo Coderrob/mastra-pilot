@@ -151,3 +151,9 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Quality reports
+reports/
+
+# Mastra studio files
+.mastra
