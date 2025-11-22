@@ -27,8 +27,11 @@ Mastra Pilot is organized as a monorepo with the following packages:
 - 🧪 **Testing**: Vitest with it.each for parameterized tests
 - 🚀 **CI/CD**: Turbo for build orchestration, Changesets for versioning
 - 🎯 **Code Quality**: ESLint (complexity ≤3), JSCPD (duplication <2%), 80% coverage
+- 📚 **Clean Code**: Zero private methods, comprehensive JSDoc, utility class extraction
+- 💪 **Hardcore Rules**: 230+ additional rules from [eslint-config-hardcore](https://github.com/EvgenyOrekhov/eslint-config-hardcore)-inspired plugins (unicorn, sonarjs, security, promise, perfectionist)
+- 🔄 **Auto-Sorting**: Class members, objects, interfaces, enums, imports/exports automatically sorted with `pnpm lint:fix`
 
-See [QUALITY_CHECKS.md](./QUALITY_CHECKS.md) for detailed quality enforcement guidelines.
+See [docs/quality-checks.md](./docs/quality-checks.md) for quality enforcement and [docs/coding-conventions.md](./docs/coding-conventions.md) for detailed coding standards.
 
 ## Installation
 

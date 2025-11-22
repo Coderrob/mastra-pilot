@@ -4,11 +4,19 @@ import { parseInput } from "../input/parse-input.js";
 import { createLogger } from "../logger/create-logger.js";
 import { createOutputWriter } from "../output/console-writer.js";
 
+/**
+ * Configuration options for running a single step
+ */
 interface StepOptions {
-  input?: string;
   file?: string;
+  input?: string;
 }
 
+/**
+ * Executes a single step with the provided type and options
+ * @param type - The step type identifier
+ * @param options - Step configuration including input data
+ */
 export async function runStep(type: string, options: StepOptions): Promise<void> {
   const logger = createLogger();
   const writer = createOutputWriter();

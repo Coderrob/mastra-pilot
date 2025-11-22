@@ -4,19 +4,33 @@ import { BaseStep, IStepContext, StepResult } from "./base-step.js";
 import { Runner } from "./runner.js";
 import { Workflow } from "./workflow.js";
 
+/**
+ * Test step that increments the input value by 1.
+ * Used for testing workflow execution through the Runner.
+ */
 class SimpleStep extends BaseStep<{ value: number }, { value: number }> {
+  /**
+   * Creates a SimpleStep instance.
+   */
   constructor() {
     super("SimpleStep");
   }
 
+  /**
+   * Increments the input value by 1.
+   * @param input - The input object
+   * @param input.value - The numeric value to increment
+   * @param _context - The step execution context (unused)
+   * @returns A promise resolving to the incremented value
+   */
   protected async run(
     input: { value: number },
     _context: IStepContext
   ): Promise<StepResult<{ value: number }>> {
     await Promise.resolve();
     return {
-      success: true,
       data: { value: input.value + 1 },
+      success: true,
     };
   }
 }
@@ -30,7 +44,7 @@ describe("Runner", () => {
   });
 
   it("should register and run a workflow", async () => {
-    const workflow = new Workflow({ name: "TestWorkflow", logger });
+    const workflow = new Workflow({ logger, name: "TestWorkflow" });
     workflow.addStep(new SimpleStep());
 
     runner.registerWorkflow(workflow);
@@ -48,18 +62,18 @@ describe("Runner", () => {
   });
 
   it("should run workflows in parallel", async () => {
-    const workflow1 = new Workflow({ name: "Workflow1", logger });
+    const workflow1 = new Workflow({ logger, name: "Workflow1" });
     workflow1.addStep(new SimpleStep());
 
-    const workflow2 = new Workflow({ name: "Workflow2", logger });
+    const workflow2 = new Workflow({ logger, name: "Workflow2" });
     workflow2.addStep(new SimpleStep());
 
     runner.registerWorkflow(workflow1);
     runner.registerWorkflow(workflow2);
 
     const results = await runner.runWorkflowsParallel([
-      { name: "Workflow1", input: { value: 1 } },
-      { name: "Workflow2", input: { value: 2 } },
+      { input: { value: 1 }, name: "Workflow1" },
+      { input: { value: 2 }, name: "Workflow2" },
     ]);
 
     expect(results).toHaveLength(2);
@@ -70,17 +84,17 @@ describe("Runner", () => {
   });
 
   it("should run workflows sequentially", async () => {
-    const workflow1 = new Workflow({ name: "Workflow1", logger });
+    const workflow1 = new Workflow({ logger, name: "Workflow1" });
     workflow1.addStep(new SimpleStep());
 
-    const workflow2 = new Workflow({ name: "Workflow2", logger });
+    const workflow2 = new Workflow({ logger, name: "Workflow2" });
     workflow2.addStep(new SimpleStep());
 
     runner.registerWorkflow(workflow1);
     runner.registerWorkflow(workflow2);
 
     const results = await runner.runWorkflowsSequential([
-      { name: "Workflow1", input: { value: 1 } },
+      { input: { value: 1 }, name: "Workflow1" },
       { name: "Workflow2" }, // Should use output from previous workflow
     ]);
 
@@ -94,8 +108,8 @@ describe("Runner", () => {
   });
 
   it("should return list of registered workflows", () => {
-    const workflow1 = new Workflow({ name: "Workflow1", logger });
-    const workflow2 = new Workflow({ name: "Workflow2", logger });
+    const workflow1 = new Workflow({ logger, name: "Workflow1" });
+    const workflow2 = new Workflow({ logger, name: "Workflow2" });
 
     runner.registerWorkflow(workflow1);
     runner.registerWorkflow(workflow2);
