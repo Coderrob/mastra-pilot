@@ -18,7 +18,15 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@repo/cli": ["./packages/cli/src"],
+      "@repo/core": ["./packages/core/src"],
+      "@repo/steps": ["./packages/steps/src"],
+      "@repo/utils": ["./packages/utils/src"],
+      "@repo/workflows": ["./packages/workflows/src"]
+    }
   },
   "exclude": [
     "node_modules",
